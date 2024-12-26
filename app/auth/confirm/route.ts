@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
 
     if (!error) {
       // Redirect to the specified `next` URL or the root of your app
-      redirect(next);
+      redirect("/sign-in");
     } else {
       console.error('Verification failed:', error.message);
     }
