@@ -34,7 +34,7 @@ export const signUpAction = async (formData: FormData) => {
     email,
     password,
     options: {
-      emailRedirectTo: `${origin}/auth/confirm`,
+      emailRedirectTo: `${origin}/sign-in`,
       data: {
         full_name: fullName || schoolName,
         role: role
