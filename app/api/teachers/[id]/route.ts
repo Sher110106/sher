@@ -1,13 +1,13 @@
 import { createClient } from "@/utils/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
+// The correct type for route handlers with dynamic params
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
-    // Remove the await from params
-    const { id } = params;
+    const { id } = context.params;
     if (!id) {
       return NextResponse.json(
         { error: "Teacher ID is required" },
