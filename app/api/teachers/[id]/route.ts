@@ -1,13 +1,14 @@
 import { createClient } from "@/utils/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
-// The correct type for route handlers with dynamic params
+// Correctly typing the handler for dynamic routes
 export async function GET(
   req: NextRequest,
-  context: { params: { id: string } }
+  context: { params: { id: string } } // Explicitly type the params
 ) {
   try {
     const { id } = context.params;
+
     if (!id) {
       return NextResponse.json(
         { error: "Teacher ID is required" },
@@ -16,7 +17,7 @@ export async function GET(
     }
 
     const supabase = await createClient();
-    
+
     const { data, error } = await supabase
       .from("teacher_profiles")
       .select("*")
