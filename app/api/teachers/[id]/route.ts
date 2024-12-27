@@ -4,10 +4,10 @@ import { NextRequest, NextResponse } from "next/server";
 // Correctly typing the handler for dynamic routes
 export async function GET(
   req: NextRequest,
-  context: { params: { id: string } } // Explicitly type the params
+  context: { params: Promise<{ id: string }> } // Explicitly type the params as a promise
 ) {
   try {
-    const { id } = context.params;
+    const { id } = await context.params; // Await the params since it may be a promise
 
     if (!id) {
       return NextResponse.json(
