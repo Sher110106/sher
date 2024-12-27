@@ -76,7 +76,8 @@ export const signUpAction = async (formData: FormData) => {
       full_name: fullName,
       subjects: subjects,
       qualifications: qualifications,
-      experience_years: parseInt(experienceYears || '0')
+      experience_years: parseInt(experienceYears || '0'),
+      email:email
     };
     const { error: teacherError } = await supabase
       .from('teacher_profiles')
@@ -90,7 +91,8 @@ export const signUpAction = async (formData: FormData) => {
       id: user.id,
       school_name: schoolName,
       location: location,
-      curriculum_type: curriculumType
+      curriculum_type: curriculumType,
+      email:email
     };
     const { error: schoolError } = await supabase
       .from('school_profiles')
