@@ -1,7 +1,8 @@
 import { createClient } from "@/utils/supabase/server"
 import { redirect } from "next/navigation";
-import { InfoIcon } from "lucide-react";
-
+import { InfoIcon} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 export default async function School(){
     const supabase=await createClient();
     const {
@@ -21,10 +22,15 @@ export default async function School(){
           </div>
         </div>
         <div className="flex flex-col gap-2 items-start">
-          <h2 className="font-bold text-2xl mb-4">Your user details</h2>
+          <h2 className="font-bold text-2xl mb-4">School</h2>
           <pre className="text-xs font-mono p-3 rounded border max-h-32 overflow-auto">
-            {JSON.stringify(user, null, 2)}
+            Hey as you are a School you can access the teachers from the below button
           </pre>
+          <div className="pt-5">
+          <Link  href="/protected/school/teachers">
+            <Button>Search For Teachers</Button>
+          </Link>
+          </div>
         </div>
         
       </div>
