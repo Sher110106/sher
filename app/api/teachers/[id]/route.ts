@@ -6,8 +6,8 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    // Ensure we have an ID
-    const { id } = await params;
+    // Remove the await from params
+    const { id } = params;
     if (!id) {
       return NextResponse.json(
         { error: "Teacher ID is required" },
