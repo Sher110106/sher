@@ -18,9 +18,7 @@ export async function createMeeting({
       credentials: JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY!),
       scopes: ['https://www.googleapis.com/auth/calendar'],
     });
-
     const calendar = google.calendar({ version: 'v3', auth });
-
     const event = {
       summary,
       description,
@@ -35,24 +33,24 @@ export async function createMeeting({
       conferenceData: {
         createRequest: {
           requestId: `teaching_${Date.now()}`,
-          conferenceSolutionKey: { type: 'hangoutsMeet' },
+          conferenceSolutionKey: { type: 'hangoutsMeet' }
         },
       },
     };
-
+    
     const response = await calendar.events.insert({
       calendarId: 'primary',
       conferenceDataVersion: 1,
       requestBody: event,
     });
-
+    
     const meetingLink = response.data.conferenceData?.entryPoints?.[0]?.uri;
     const meetingId = response.data.id;
-
+    
     if (!meetingLink || !meetingId) {
       throw new Error('Failed to create Google Meet link');
     }
-
+    
     return { meetingLink, meetingId };
   } catch (error) {
     console.error('Error creating Google Meet:', error);
