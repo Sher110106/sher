@@ -66,25 +66,27 @@ export async function POST(req: Request) {
 
 async function handleAcceptedRequest(teacherData: any, schoolData: any, record: any, supabase: any) {
   try {
-    // Create Google Meet link
+    // Convert schedule to ISO string format
+    const [year, month, day] = record.schedule.date.split('-');
+    const [hours, minutes] = record.schedule.time.split(':');
+    const startTime = new Date(year, month - 1, day, hours, minutes);
+    const endTime = new Date(startTime.getTime() + 60 * 60 * 1000); // Add 1 hour
+
+    console.log('Start time:', startTime.toISOString());
+    console.log('End time:', endTime.toISOString());
+
     const { meetingLink, meetingId } = await createMeeting({
       summary: `${record.subject} Class - ${schoolData.school_name}`,
       description: `Teaching session for ${record.subject}`,
-      startTime: record.schedule.startTime,
-      endTime: record.schedule.endTime,
+      startTime: startTime.toISOString(),
+      endTime: endTime.toISOString()
     });
 
-    // Update the teaching request with the meeting link
-    const { error: updateError } = await supabase
+    await supabase
       .from('teaching_requests')
       .update({ meet_link: meetingLink, meet_id: meetingId })
       .eq('id', record.id);
 
-    if (updateError) {
-      throw new Error('Failed to update teaching request with meeting link');
-    }
-
-    // Send acceptance emails with meeting link
     const emailHTML = await render(
       EmailTemplate({
         teacherName: teacherData.full_name,
@@ -96,21 +98,20 @@ async function handleAcceptedRequest(teacherData: any, schoolData: any, record: 
       })
     );
 
-    // Send to teacher
-    await resend.emails.send({
-      from: 'noreply@bugzer.tech',
-      to: teacherData.email,
-      subject: 'Teaching Request Accepted - Meeting Details',
-      html: emailHTML,
-    });
-
-    // Send to school
-    await resend.emails.send({
-      from: 'noreply@bugzer.tech',
-      to: schoolData.email,
-      subject: 'Teaching Request Accepted - Meeting Details',
-      html: emailHTML,
-    });
+    await Promise.all([
+      resend.emails.send({
+        from: 'noreply@bugzer.tech',
+        to: teacherData.email,
+        subject: 'Teaching Request Accepted - Meeting Details',
+        html: emailHTML,
+      }),
+      resend.emails.send({
+        from: 'noreply@bugzer.tech',
+        to: schoolData.email,
+        subject: 'Teaching Request Accepted - Meeting Details',
+        html: emailHTML,
+      })
+    ]);
   } catch (error) {
     console.error('Error in handleAcceptedRequest:', error);
     throw error;
