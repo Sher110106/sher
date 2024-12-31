@@ -1,4 +1,5 @@
 import { google } from 'googleapis';
+
 interface MeetingParams {
   summary: string;
   description: string;
@@ -13,15 +14,8 @@ export async function createMeeting({
   endTime,
 }: MeetingParams) {
   try {
-    const privateKey = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n');
-    const clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
-
     const auth = new google.auth.GoogleAuth({
-      credentials: {
-        type: 'service_account',
-        client_email: clientEmail,
-        private_key: privateKey,
-      },
+      credentials: JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY!),
       scopes: ['https://www.googleapis.com/auth/calendar'],
     });
 
