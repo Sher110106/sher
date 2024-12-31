@@ -66,10 +66,24 @@ export async function POST(req: Request) {
 
 async function handleAcceptedRequest(teacherData: any, schoolData: any, record: any, supabase: any) {
   try {
-    // Convert schedule to ISO string format
+    // Parse the date and time
     const [year, month, day] = record.schedule.date.split('-');
-    const [hours, minutes] = record.schedule.time.split(':');
-    const startTime = new Date(year, month - 1, day, hours, minutes);
+    const timeMatch = record.schedule.time.match(/(\d+):(\d+)\s*(AM|PM)/i);
+    let hours = parseInt(timeMatch[1]);
+    const minutes = parseInt(timeMatch[2]);
+    const period = timeMatch[3].toUpperCase();
+    
+    // Convert to 24-hour format
+    if (period === 'PM' && hours !== 12) hours += 12;
+    if (period === 'AM' && hours === 12) hours = 0;
+    
+    const startTime = new Date(
+      parseInt(year),
+      parseInt(month) - 1,
+      parseInt(day),
+      hours,
+      minutes
+    );
     const endTime = new Date(startTime.getTime() + 60 * 60 * 1000); // Add 1 hour
 
     console.log('Start time:', startTime.toISOString());
@@ -117,7 +131,6 @@ async function handleAcceptedRequest(teacherData: any, schoolData: any, record: 
     throw error;
   }
 }
-
 async function sendPendingEmail(teacherData: any, schoolData: any, record: any) {
   const emailHTML = await render(
     EmailTemplate({
