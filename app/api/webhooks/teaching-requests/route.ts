@@ -6,6 +6,28 @@ import { createMeetingWithUserAuth } from '@/utils/google-meet';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
+interface TeacherProfile {
+  full_name: string;
+  email: string;
+}
+
+interface SchoolProfile {
+  school_name: string;
+  email: string;
+}
+
+interface TeachingRequest {
+  id: string;
+  teacher_id: string;
+  school_id: string;
+  subject: string;
+  schedule: {
+    date: string;
+    time: string;
+  };
+  status: 'pending' | 'accepted' | 'rejected';
+}
+
 export async function POST(req: Request) {
   console.log('Webhook received:', new Date().toISOString());
   try {
@@ -54,17 +76,32 @@ export async function POST(req: Request) {
   }
 }
 
-async function handleAcceptedRequest(teacherData: any, schoolData: any, record: any, supabase: any) {
+async function handleAcceptedRequest(
+  teacherData: TeacherProfile,
+  schoolData: SchoolProfile,
+  record: TeachingRequest,
+  supabase: any
+) {
   try {
+    console.log('Handling accepted request:', { recordId: record.id, teacherId: record.teacher_id });
+
+    // Parse schedule details
+    console.log('Parsing schedule details:', record.schedule);
     const [year, month, day] = record.schedule.date.split('-');
     const timeMatch = record.schedule.time.match(/(\d+):(\d+)\s*(AM|PM)/i);
+
+    if (!timeMatch) {
+      console.error('Time format error:', record.schedule.time);
+      throw new Error('Invalid time format in schedule');
+    }
+
     let hours = parseInt(timeMatch[1]);
     const minutes = parseInt(timeMatch[2]);
     const period = timeMatch[3].toUpperCase();
-    
+
     if (period === 'PM' && hours !== 12) hours += 12;
     if (period === 'AM' && hours === 12) hours = 0;
-    
+
     const startTime = new Date(
       parseInt(year),
       parseInt(month) - 1,
@@ -74,6 +111,10 @@ async function handleAcceptedRequest(teacherData: any, schoolData: any, record: 
     );
     const endTime = new Date(startTime.getTime() + 60 * 60 * 1000);
 
+    console.log('Parsed start and end times:', { startTime, endTime });
+
+    // Create Google Meet link
+    console.log('Creating Google Meet link with user authentication...');
     const result = await createMeetingWithUserAuth({
       summary: `${record.subject} Class - ${schoolData.school_name}`,
       description: `Teaching session for ${record.subject}`,
@@ -84,21 +125,45 @@ async function handleAcceptedRequest(teacherData: any, schoolData: any, record: 
     });
 
     if (result.needsAuth) {
-      await sendAuthorizationEmail(teacherData, schoolData, record, result.authUrl!);
+      console.warn('Authorization required for Google Meet:', { authUrl: result.authUrl });
+      await sendAuthorizationEmail(teacherData, schoolData, record, result.authUrl);
       return;
     }
 
-    await supabase
+    if (!result.meetingLink || !result.meetingId) {
+      throw new Error('Missing meeting details from Google Meet');
+    }
+
+    console.log('Google Meet link created:', { meetingLink: result.meetingLink, meetingId: result.meetingId });
+
+    // Update database with meeting details
+    console.log('Updating database with meeting details...');
+    const { error: updateError } = await supabase
       .from('teaching_requests')
-      .update({ meet_link: result.meetingLink!, meet_id: result.meetingId! })
+      .update({ meet_link: result.meetingLink, meet_id: result.meetingId })
       .eq('id', record.id);
 
-    await sendAcceptanceEmails(teacherData, schoolData, record, result.meetingLink!);
+    if (updateError) {
+      console.error('Database update error:', updateError);
+      throw new Error('Failed to update teaching request with meeting details');
+    }
+
+    console.log('Database successfully updated. Sending acceptance emails...');
+    await sendAcceptanceEmails(teacherData, schoolData, record, result.meetingLink);
+
+    console.log('Acceptance emails sent successfully.');
   } catch (error) {
-    console.error('Accept request error:', error);
+    console.error('Error in handleAcceptedRequest:', {
+      errorMessage: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      teacherData,
+      schoolData,
+      record
+    });
     throw error;
   }
 }
+
 
 async function sendPendingEmail(teacherData: any, schoolData: any, record: any) {
   const emailHTML = await render(
