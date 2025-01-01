@@ -1,26 +1,20 @@
-// utils/zoom.ts
 import axios from 'axios';
 
 interface MeetingParams {
-  summary: string;
-  description: string;
-  startTime: string;
-  endTime: string;
+  topic: string;
+  agenda: string;
+  startTime: string; // ISO 8601 format
+  duration: number;  // Duration in minutes
 }
 
 export async function createMeeting({
-  summary,
-  description,
+  topic,
+  agenda,
   startTime,
-  endTime
+  duration,
 }: MeetingParams) {
   try {
-    // Calculate duration in minutes
-    const start = new Date(startTime);
-    const end = new Date(endTime);
-    const durationMinutes = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60));
-
-    // Obtain an access token using Client ID and Client Secret
+    // Obtain an access token using your Client ID and Client Secret
     const tokenResponse = await axios.post(
       `https://zoom.us/oauth/token?grant_type=account_credentials&account_id=${process.env.ZOOM_ACCOUNT_ID!}`,
       {},
@@ -38,17 +32,17 @@ export async function createMeeting({
     const meetingResponse = await axios.post(
       'https://api.zoom.us/v2/users/me/meetings',
       {
-        topic: summary,
-        agenda: description,
+        topic,
+        agenda,
         start_time: startTime,
-        duration: durationMinutes,
+        duration,
         timezone: 'UTC',
         settings: {
           host_video: true,
           participant_video: true,
           join_before_host: false,
           mute_upon_entry: true,
-          approval_type: 2,
+          approval_type: 2, // No registration required
         },
       },
       {
@@ -59,16 +53,15 @@ export async function createMeeting({
       }
     );
 
-    const { join_url, id } = meetingResponse.data;
-    return { meetingLink: join_url, meetingId: id };
+    const { start_url, join_url, id } = meetingResponse.data;
+
+    return { startUrl: start_url, joinUrl: join_url, meetingId: id };
   } catch (error) {
-    console.error('Error creating Zoom meeting:', 
-      axios.isAxiosError(error) 
-        ? error.response?.data || error.message 
-        : error instanceof Error 
-          ? error.message 
-          : 'Unknown error'
-    );
+    if (error instanceof Error) {
+      console.error('Error creating Zoom meeting:', error.message);
+    } else if (axios.isAxiosError(error)) {
+      console.error('Error creating Zoom meeting:', error.response?.data || error.message);
+    }
     throw error;
   }
 }
