@@ -120,7 +120,7 @@ export async function createMeetingWithUserAuth({
     });
 
     if (error instanceof Error && error.message === 'NO_GOOGLE_AUTH') {
-      const authUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/google?teacherId=${teacherId}&requestId=${requestId}`;
+      const authUrl = `https://sher-sable.vercel.app/api/auth/google?teacherId=${teacherId}&requestId=${requestId}`;
       console.log('Authorization required, generating auth URL:', authUrl);
 
       return {
