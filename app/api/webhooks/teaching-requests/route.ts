@@ -29,7 +29,6 @@ interface TeachingRequest {
   status: 'pending' | 'accepted' | 'rejected';
 }
 export async function POST(req: Request) {
-  console.log(resend)
   console.log('Webhook received:', new Date().toISOString());
   try {
     const payload = await req.json();

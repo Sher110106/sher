@@ -1,9 +1,20 @@
 // app/(dashboard)/teacher/page.tsx
 import { TeachingRequestsList } from '@/components/TeachingRequestsProvider';
+import { Button } from '@/components/ui/button';
 import { createClient } from "@/utils/supabase/server";
+import Link from 'next/link';
+import { redirect } from 'next/navigation';
 
 export default async function TeacherDashboard() {
-  const supabase = await createClient();
+  const supabase=await createClient();
+  const {
+      data:{user} 
+  }=await supabase.auth.getUser();
+  if(!user){
+      redirect('/sign-in')
+  }
+  
+
 
   // Fetch initial requests
   const { data: initialRequests } = await supabase
@@ -12,15 +23,21 @@ export default async function TeacherDashboard() {
       *,
       school:school_profiles(
         school_name,
-        location,
+        state,
+        district,
+        cluster,
+        block,
         curriculum_type
       )
     `)
     .order('created_at', { ascending: false });
 
   return (
+    
     <div className="max-w-4xl mx-auto p-6">
+      <Link href='/protected/teacher/schedule'className='pb-5' ><Button>Change Schedule</Button></Link>
       <h1 className="text-2xl font-bold mb-6">Teaching Requests</h1>
+
       <TeachingRequestsList initialRequests={initialRequests || []} />
     </div>
   );

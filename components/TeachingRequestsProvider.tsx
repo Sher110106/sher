@@ -13,7 +13,10 @@ interface TeachingRequest {
   created_at: string;
   school: {
     school_name: string;
-    location: string;
+    state: string,
+    district: string,
+    cluster: string,
+    block: string,
     curriculum_type: string;
   };
 }
@@ -92,7 +95,10 @@ export function TeachingRequestsList({
               *,
               school:school_profiles(
                 school_name,
-                location,
+                state,
+                district,
+                cluster,
+                block,
                 curriculum_type
               )
             `)
@@ -150,7 +156,7 @@ export function TeachingRequestsList({
                 {request.school.school_name}
               </h3>
               <p className="text-gray-600">
-                {request.school.location} • {request.school.curriculum_type}
+                {request.school.block} • {request.school.curriculum_type}
               </p>
               <p className="text-sm text-gray-500 mt-1">
                 Received {format(new Date(request.created_at), 'PPp')}

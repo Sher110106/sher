@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useRouter } from 'next/navigation'; // Changed from 'next/router' to 'next/navigation'
+import { useRouter } from 'next/navigation'; 
 
 interface Teacher {
   id: string;
@@ -12,7 +12,15 @@ interface Teacher {
   subjects: string[];
   qualifications: string[];
   experience_years: number;
-  availability: { day: string; time: string };
+  availability: {
+    schedule: Array<{
+      day: string;
+      time_range: {
+        start: string;
+        end: string;
+      };
+    }>;
+  };
 }
 
 interface FilterState {
@@ -22,10 +30,17 @@ interface FilterState {
   qualifications: string[];
   availability: {
     day: string;
-    time: string;
+    time?: string;
+    startTime?: string;
+    endTime?: string;
   } | null;
   sortBy: 'experience_desc' | 'experience_asc' | 'name_asc' | 'name_desc';
 }
+
+const timeSlots = Array.from({ length: 24 }, (_, i) => {
+  const hour = i.toString().padStart(2, '0');
+  return `${hour}:00`;
+});
 
 export default function SchoolClient() {
   const [teachers, setTeachers] = useState<Teacher[]>([]);
@@ -107,7 +122,7 @@ export default function SchoolClient() {
 
   // Navigate to Teacher Detail Page
   const handleTeacherClick = (teacherId: string) => {
-    router.push(`teachers/${teacherId}`); // Updated path to match app directory structure
+    router.push(`teachers/${teacherId}`); 
   };
 
   return (
@@ -157,7 +172,7 @@ export default function SchoolClient() {
               <Select
                 value={filters.availability?.day || ''}
                 onValueChange={(day: string) =>
-                  handleFilterChange('availability', day ? { day, time: filters.availability?.time || '' } : null)
+                  handleFilterChange('availability', day ? { day } : null)
                 }
               >
                 <SelectTrigger>
@@ -173,16 +188,19 @@ export default function SchoolClient() {
               </Select>
 
               <Select
-                value={filters.availability?.time || ''}
-                onValueChange={(time: string) =>
-                  handleFilterChange('availability', time ? { day: filters.availability?.day || '', time } : null)
+                value={filters.availability?.startTime || ''}
+                onValueChange={(startTime: string) =>
+                  handleFilterChange('availability', {
+                    ...filters.availability,
+                    startTime
+                  })
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Time" />
+                  <SelectValue placeholder="Start Time" />
                 </SelectTrigger>
                 <SelectContent>
-                  {times.map((time) => (
+                  {timeSlots.map((time) => (
                     <SelectItem key={time} value={time}>
                       {time}
                     </SelectItem>
@@ -191,7 +209,6 @@ export default function SchoolClient() {
               </Select>
             </div>
           </div>
-
           {/* Sort Options */}
           <div className="space-y-2">
             <label className="text-sm font-medium">Sort By</label>
@@ -229,7 +246,12 @@ export default function SchoolClient() {
                     <p><span className="font-medium">Qualifications:</span> {teacher.qualifications.join(", ")}</p>
                     <p>
                       <span className="font-medium">Availability:</span>{" "}
-                      {teacher.availability?.day} at {teacher.availability?.time}
+                      {teacher.availability?.schedule.map((slot, index) => (
+                        <span key={index}>
+                          {slot.day} ({slot.time_range.start} - {slot.time_range.end})
+                          {index < teacher.availability.schedule.length - 1 ? ', ' : ''}
+                        </span>
+                      ))}
                     </p>
                   </div>
                 </CardContent>

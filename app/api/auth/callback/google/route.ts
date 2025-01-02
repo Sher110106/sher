@@ -97,9 +97,9 @@ export async function GET(request: Request) {
     }
 
     console.log('OAuth callback successful');
-    return Response.redirect(`${process.env.NEXT_PUBLIC_BASE_URL}/dashboard?oauth=success`);
+    return Response.redirect(`${process.env.NEXT_PUBLIC_BASE_URL}/protected/teacher/dashboard?oauth=success`);
   } catch (error) {
     console.error('OAuth callback error:', error);
-    return Response.redirect(`${process.env.NEXT_PUBLIC_BASE_URL}/dashboard?oauth=error`);
+    return Response.redirect(`${process.env.NEXT_PUBLIC_BASE_URL}/protected/teacher/dashboard?oauth=error`);
   }
 }

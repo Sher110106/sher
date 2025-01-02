@@ -11,7 +11,8 @@ import { SmtpMessage } from "../smtp-message";
 export default function Signup(props: { searchParams: Promise<Message>; }) {
   const [searchParams, setSearchParams] = useState<Message | null>(null);
   const [selectedRole, setSelectedRole] = useState<'school' | 'teacher' | null>(null);
-  const [selectedSubjects, setSelectedSubjects] = useState<string>();
+  const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
+  const [selectedQualifications, setSelectedQualifications] = useState<string[]>([]);
 
   useEffect(() => {
     async function fetchSearchParams() {
@@ -33,24 +34,36 @@ export default function Signup(props: { searchParams: Promise<Message>; }) {
     setSelectedRole(value);
   };
 
-  const handleSubjectChange = (value:string) => {
-    setSelectedSubjects(value);
-    
+  const handleSubjectChange = (value: string) => {
+    setSelectedSubjects((prev) => {
+      if (prev.includes(value)) {
+        return prev.filter((subject: string) => subject !== value);
+      } else if (prev.length < 3) {
+        return [...prev, value];
+      }
+      return prev;
+    });
   };
+
+  const handleQualificationChange = (value: string) => {
+    setSelectedQualifications((prev) => {
+      if (prev.includes(value)) {
+        return prev.filter((qual: string) => qual !== value);
+      }
+      return [...prev, value];
+    });
+  };
+
   const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault(); // Prevent the default form submission
-    
+    event.preventDefault();
     try {
-      // Create FormData from the form submission
       const formData = new FormData(event.target as HTMLFormElement);
-  
-      // Call signUpAction (which already handles redirect)
       await signUpAction(formData);
     } catch (error) {
-      // Handle any errors during the signup process
       console.error("An error occurred during sign-up:", error);
     }
   };
+
   return (
     <>
       <form
@@ -107,10 +120,23 @@ export default function Signup(props: { searchParams: Promise<Message>; }) {
             <>
               <Label htmlFor="schoolName">School Name</Label>
               <Input name="schoolName" placeholder="Your School Name" required />
-              <Label htmlFor="location">Location</Label>
-              <Input name="location" placeholder="School Location" required />
+              
+              <Label htmlFor="state">State</Label>
+              <Input name="state" placeholder="State" required />
+              
+              <Label htmlFor="district">District</Label>
+              <Input name="district" placeholder="District" required />
+              
+              <Label htmlFor="cluster">Cluster</Label>
+              <Input name="cluster" placeholder="Cluster" required />
+              
+              <Label htmlFor="block">Block</Label>
+              <Input name="block" placeholder="Block" required />
+
               <Label htmlFor="curriculumType">Curriculum Type</Label>
               <Input name="curriculumType" placeholder="Curriculum Type" required />
+
+              
             </>
           )}
 
@@ -118,61 +144,61 @@ export default function Signup(props: { searchParams: Promise<Message>; }) {
             <>
               <Label htmlFor="fullName">Full Name</Label>
               <Input name="fullName" placeholder="Your Full Name" required />
-              <Label htmlFor="subjects">Subjects</Label>
+
+              <Label htmlFor="teachingGrade">Grade</Label>
+              <Input
+                type="number"
+                name="teachingGrade"
+                placeholder="Teaching Grade"
+                min="1"
+                max="12"
+                required
+              />
+
+              <Label htmlFor="subjects">Subjects (Max 3)</Label>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="math" className="flex items-center gap-2">
-                  <Input
-                    type="checkbox"
-                    id="math"
-                    name="subjects"
-                    value="math"
-                    checked={selectedSubjects==='Math'}
-                    onChange={()=>handleSubjectChange("Math")}
-                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                  />
-                  Math
-                </Label>
-                <Label htmlFor="science" className="flex items-center gap-2">
-                  <Input
-                    type="checkbox"
-                    id="science"
-                    name="subjects"
-                    value="science"
-                    checked={selectedSubjects==='Science'}
-                    onChange={()=>handleSubjectChange("Science")}
-                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                  />
-                  Science
-                </Label>
-                <Label htmlFor="english" className="flex items-center gap-2">
-                  <Input
-                    type="checkbox"
-                    id="english"
-                    name="subjects"
-                    value="english"
-                    checked={selectedSubjects==='English'}
-                    onChange={()=>handleSubjectChange("English")}
-                    className="h -4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                  />
-                  English
-                </Label>
-                <Label htmlFor="history" className="flex items-center gap-2">
-                  <Input
-                    type="checkbox"
-                    id="history"
-                    name="subjects"
-                    value="history"
-                    checked={selectedSubjects==='History'}
-                    onChange={()=>handleSubjectChange("History")}
-                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                  />
-                  History
-                </Label>
+                {['Math', 'Science', 'English', 'History'].map((subject) => (
+                  <Label key={subject} htmlFor={subject.toLowerCase()} className="flex items-center gap-2">
+                    <Input
+                      type="checkbox"
+                      id={subject.toLowerCase()}
+                      name="subjects"
+                      value={subject.toLowerCase()}
+                      checked={selectedSubjects.includes(subject.toLowerCase())}
+                      onChange={() => handleSubjectChange(subject.toLowerCase())}
+                      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                    />
+                    {subject}
+                  </Label>
+                ))}
               </div>
+
               <Label htmlFor="qualifications">Qualifications</Label>
-              <Input name="qualifications" placeholder="Qualifications" required />
+              <div className="flex flex-col gap-2">
+                {['PhD', 'Masters', 'Bachelors', 'Diploma', 'Other'].map((qual) => (
+                  <Label key={qual} htmlFor={qual.toLowerCase()} className="flex items-center gap-2">
+                    <Input
+                      type="checkbox"
+                      id={qual.toLowerCase()}
+                      name="qualifications"
+                      value={qual.toLowerCase()}
+                      checked={selectedQualifications.includes(qual.toLowerCase())}
+                      onChange={() => handleQualificationChange(qual.toLowerCase())}
+                      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                    />
+                    {qual}
+                  </Label>
+                ))}
+              </div>
+
               <Label htmlFor="experienceYears">Experience Years</Label>
-              <Input name="experienceYears" placeholder="Experience Years" type="number" required />
+              <Input 
+                name="experienceYears" 
+                placeholder="Experience Years" 
+                type="number"
+                min="0"
+                required 
+              />
             </>
           )}
 

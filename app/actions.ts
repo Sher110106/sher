@@ -7,27 +7,46 @@ import { redirect } from "next/navigation";
 
 
 export const signUpAction = async (formData: FormData) => {
+  // Basic information
   const email = formData.get("email")?.toString();
   const password = formData.get("password")?.toString();
   const role = formData.get("role")?.toString();
+  
+  // School specific fields
   const schoolName = formData.get("schoolName")?.toString();
-  const location = formData.get("location")?.toString();
+  const state = formData.get("state")?.toString();
+  const district = formData.get("district")?.toString();
+  const cluster = formData.get("cluster")?.toString();
+  const block = formData.get("block")?.toString();
   const curriculumType = formData.get("curriculumType")?.toString();
+  
+  // Teacher specific fields
   const fullName = formData.get("fullName")?.toString();
   const subjects = formData.getAll("subjects");
-  const qualifications = formData.get("qualifications")?.toString();
+  const qualifications = formData.getAll("qualifications"); // Now getting all selected qualifications
   const experienceYears = formData.get("experienceYears")?.toString();
+  const teachingGrade = formData.get("teachingGrade")?.toString();
+
   const supabase = await createClient();
   const origin = (await headers()).get("origin");
 
+  // Basic validation
   if (!email || !password || !role || (!schoolName && !fullName)) {
     return encodedRedirect("error", "/sign-up", "All fields are required");
   }
 
   // Validate role
   if (role !== 'teacher' && role !== 'school') {
-    
     return encodedRedirect("error", "/sign-up", "Invalid role selected");
+  }
+
+  // Role-specific validation
+  if (role === 'school' && (!schoolName || !state || !district || !cluster || !block || !curriculumType)) {
+    return encodedRedirect("error", "/sign-up", "All school fields are required");
+  }
+
+  if (role === 'teacher' && (!fullName || !subjects.length || !qualifications.length || !experienceYears || !teachingGrade)) {
+    return encodedRedirect("error", "/sign-up", "All teacher fields are required");
   }
 
   const { data: { user }, error } = await supabase.auth.signUp({
@@ -47,11 +66,10 @@ export const signUpAction = async (formData: FormData) => {
   }
 
   if (!user) {
-    return encodedRedirect("error", "/sign-up","Not Valid Information");
+    return encodedRedirect("error", "/sign-up", "Not Valid Information");
   }
 
-  // Create profile based on role
-  
+  // Create base profile
   const profile = {
     id: user.id,
     full_name: fullName || schoolName,
@@ -75,13 +93,16 @@ export const signUpAction = async (formData: FormData) => {
       id: user.id,
       full_name: fullName,
       subjects: subjects,
-      qualifications: qualifications,
+      qualifications: qualifications, // Now an array of selected qualifications
       experience_years: parseInt(experienceYears || '0'),
-      email:email
+      teaching_grade: parseInt(teachingGrade || '0'),
+      email: email
     };
+
     const { error: teacherError } = await supabase
       .from('teacher_profiles')
       .insert([teacherProfile]);
+
     if (teacherError) {
       await supabase.auth.admin.deleteUser(user.id);
       return encodedRedirect("error", "/sign-up", teacherError.message);
@@ -90,13 +111,18 @@ export const signUpAction = async (formData: FormData) => {
     const schoolProfile = {
       id: user.id,
       school_name: schoolName,
-      location: location,
+      state: state,
+      district: district,
+      cluster: cluster,
+      block: block,
       curriculum_type: curriculumType,
-      email:email
+      email: email
     };
+
     const { error: schoolError } = await supabase
       .from('school_profiles')
       .insert([schoolProfile]);
+
     if (schoolError) {
       await supabase.auth.admin.deleteUser(user.id);
       return encodedRedirect("error", "/sign-in", schoolError.message);
@@ -109,8 +135,6 @@ export const signUpAction = async (formData: FormData) => {
     "Thanks for signing up! Please check your email for a verification link."
   );
 };
-
-
 export const signInAction = async (formData: FormData) => {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;

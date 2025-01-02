@@ -16,7 +16,15 @@ interface Teacher {
   subjects: string[];
   qualifications: string[];
   experience_years: number;
-  availability: { day: string; time: string } | null;
+  availability: {
+    schedule: Array<{
+      day: string;
+      time_range: {
+        start: string;
+        end: string;
+      };
+    }>;
+  };
 }
 
 interface RequestForm {
@@ -190,11 +198,14 @@ export default function TeacherDetail() {
               <p><strong>Experience:</strong> {teacher.experience_years} years</p>
               <p><strong>Qualifications:</strong> {teacher.qualifications?.join(", ") || "No qualifications listed"}</p>
               <p>
-                <strong>Availability:</strong>{" "}
-                {teacher.availability 
-                  ? `${teacher.availability.day} at ${teacher.availability.time}`
-                  : "No availability set"}
-              </p>
+                      <span className="font-medium"><strong>Availability:</strong></span>{" "}
+                      {teacher.availability?.schedule.map((slot, index) => (
+                        <span key={index}>
+                          {slot.day} ({slot.time_range.start} - {slot.time_range.end})
+                          {index < teacher.availability.schedule.length - 1 ? ', ' : ''}
+                        </span>
+                      ))}
+                    </p>
             </div>
           </CardContent>
         </Card>
