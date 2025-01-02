@@ -6,6 +6,7 @@ import { createMeetingWithUserAuth } from '@/utils/google-meet';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
+
 interface TeacherProfile {
   full_name: string;
   email: string;
@@ -28,6 +29,7 @@ interface TeachingRequest {
   status: 'pending' | 'accepted' | 'rejected';
 }
 export async function POST(req: Request) {
+  console.log(resend)
   console.log('Webhook received:', new Date().toISOString());
   try {
     const payload = await req.json();
