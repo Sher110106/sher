@@ -27,7 +27,6 @@ interface TeachingRequest {
   };
   status: 'pending' | 'accepted' | 'rejected';
 }
-
 export async function POST(req: Request) {
   console.log('Webhook received:', new Date().toISOString());
   try {
@@ -39,7 +38,6 @@ export async function POST(req: Request) {
     }
     
     const supabase = await createClient();
-    
     const { data: teacherData, error: teacherError } = await supabase
       .from('teacher_profiles')
       .select('full_name, email')
@@ -56,7 +54,7 @@ export async function POST(req: Request) {
       console.error('Profile fetch error:', { teacherError, schoolError });
       return new Response('Error processing webhook', { status: 500 });
     }
-
+    
     switch (record.status) {
       case 'pending':
         await sendPendingEmail(teacherData, schoolData, record);
@@ -84,6 +82,17 @@ async function handleAcceptedRequest(
 ) {
   try {
     console.log('Handling accepted request:', { recordId: record.id, teacherId: record.teacher_id });
+    const { data: existingMeeting } = await supabase
+    .from('meeting_details')
+    .select('meet_link, meet_id, summary, description')
+    .eq('teaching_request_id', record.id)
+    .single();
+
+  if (existingMeeting) {
+    console.log('Meeting already exists for this request:', existingMeeting);
+    await sendAcceptanceEmails(teacherData, schoolData, record, existingMeeting.meet_link);
+    return;
+  }
 
     // Parse schedule details
     console.log('Parsing schedule details:', record.schedule);
@@ -123,7 +132,7 @@ async function handleAcceptedRequest(
       teacherId: record.teacher_id,
       requestId: record.id
     });
-
+    
     if (result.needsAuth) {
       console.warn('Authorization required for Google Meet:', { authUrl: result.authUrl });
       await sendAuthorizationEmail(teacherData, schoolData, record, result.authUrl);
@@ -138,10 +147,22 @@ async function handleAcceptedRequest(
 
     // Update database with meeting details
     console.log('Updating database with meeting details...');
+    const meetingSummary = `${record.subject} Class - ${schoolData.school_name}`;
+    const meetingDescription = `Teaching session for ${record.subject}
+      Teacher: ${teacherData.full_name}
+      School: ${schoolData.school_name}
+      Date: ${record.schedule.date}
+      Time: ${record.schedule.time}`;
     const { error: updateError } = await supabase
-      .from('teaching_requests')
-      .update({ meet_link: result.meetingLink, meet_id: result.meetingId })
-      .eq('id', record.id);
+      .from('meeting_details')
+      .insert({
+        teaching_request_id: record.id,
+        meet_link: result.meetingLink,
+        meet_id: result.meetingId,
+        summary: meetingSummary,
+        description: meetingDescription,
+        teacher_id:record.teacher_id
+      });
 
     if (updateError) {
       console.error('Database update error:', updateError);
