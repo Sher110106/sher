@@ -12,10 +12,6 @@ export default async function scheduleDashboard(){
 
     }
     
-    interface TimeSlotInputProps {
-        teacherId: string;
-        onSubmitSuccess?: (data: any) => void;
-      }
     return(
         <>
 
