@@ -14,7 +14,6 @@ export default async function scheduleDashboard(){
     
     return(
         <>
-
             <TimeSlotInput teacherId={user.id} ></TimeSlotInput>
         </>
     )

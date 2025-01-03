@@ -35,10 +35,16 @@ export default async function TeacherDashboard() {
   return (
     
     <div className="max-w-4xl mx-auto p-6">
-      <Link href='/protected/teacher/schedule'className='pb-5' ><Button>Change Schedule</Button></Link>
+      <div className='flex flex-row justify-items-start p-5'>
+      <Link href='/protected/teacher/schedule'className='mr-5' ><Button>Change Schedule</Button></Link>
+      <Link href='/protected/teacher/edit'className='' ><Button>Edit Details</Button></Link>
+
+      </div>
+      <div>
       <h1 className="text-2xl font-bold mb-6">Teaching Requests</h1>
 
       <TeachingRequestsList initialRequests={initialRequests || []} />
+      </div>
     </div>
   );
 }
