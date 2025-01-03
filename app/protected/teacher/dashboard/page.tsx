@@ -37,7 +37,8 @@ export default async function TeacherDashboard() {
     <div className="max-w-4xl mx-auto p-6">
       <div className='flex flex-row justify-items-start p-5'>
       <Link href='/protected/teacher/schedule'className='mr-5' ><Button>Change Schedule</Button></Link>
-      <Link href='/protected/teacher/edit'className='' ><Button>Edit Details</Button></Link>
+      <Link href='/protected/teacher/edit'className='mr-5' ><Button>Edit Details</Button></Link>
+      <Link href='/protected/teacher/past_classes'className='' ><Button>Past Classes</Button></Link>
 
       </div>
       <div>

@@ -21,16 +21,21 @@ export default async function School(){
             Hey as you are a School you can access the teachers from the below button
           </pre>
           <div className="pt-5 flex-col ">
-          <div>
-          <Link  href="/protected/school/teachers">
-            <Button>Search For Teachers</Button>
-          </Link>
-          </div>
-          <div className='pt-5'>
-          <Link  href="/protected/school/edit" >
-            <Button>Edit your profile</Button>
-          </Link>
-          </div>
+            <div>
+            <Link  href="/protected/school/teachers">
+              <Button>Search For Teachers</Button>
+            </Link>
+            </div>
+            <div className='pt-5 pb-5'>
+            <Link  href="/protected/school/edit" >
+              <Button>Edit your profile</Button>
+            </Link>
+            </div>
+            <div>
+            <Link  href="/protected/school/past_classes" >
+              <Button>Past Classes</Button>
+            </Link>
+            </div>
 
           </div>
         </div>
