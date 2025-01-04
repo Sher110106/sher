@@ -1,96 +1,116 @@
-<a href="https://demo-nextjs-with-supabase.vercel.app/">
-  <img alt="Next.js and Supabase Starter Kit - the fastest way to build apps with Next.js and Supabase" src="https://demo-nextjs-with-supabase.vercel.app/opengraph-image.png">
-  <h1 align="center">Next.js and Supabase Starter Kit</h1>
-</a>
+# Quad - Educational Platform
 
-<p align="center">
- The fastest way to build apps with Next.js and Supabase
-</p>
-
-<p align="center">
-  <a href="#features"><strong>Features</strong></a> ·
-  <a href="#demo"><strong>Demo</strong></a> ·
-  <a href="#deploy-to-vercel"><strong>Deploy to Vercel</strong></a> ·
-  <a href="#clone-and-run-locally"><strong>Clone and run locally</strong></a> ·
-  <a href="#feedback-and-issues"><strong>Feedback and issues</strong></a>
-  <a href="#more-supabase-examples"><strong>More Examples</strong></a>
-</p>
-<br/>
+Quad is a modern web platform that connects teachers with schools, facilitating online teaching and class management. Built with Next.js 14, Supabase, and TypeScript.
 
 ## Features
 
-- Works across the entire [Next.js](https://nextjs.org) stack
-  - App Router
-  - Pages Router
-  - Middleware
-  - Client
-  - Server
-  - It just works!
-- supabase-ssr. A package to configure Supabase Auth to use cookies
-- Styling with [Tailwind CSS](https://tailwindcss.com)
-- Components with [shadcn/ui](https://ui.shadcn.com/)
-- Optional deployment with [Supabase Vercel Integration and Vercel deploy](#deploy-your-own)
-  - Environment variables automatically assigned to Vercel project
+### For Teachers
+- **Profile Management**
+  - Personal information
+  - Subject expertise
+  - Qualifications
+  - Teaching experience
+  - Availability scheduling
 
-## Demo
+- **Class Management**
+  - View upcoming and past classes
+  - Integrated Google Meet for online teaching
+  - Class recordings management
 
-You can view a fully working demo at [demo-nextjs-with-supabase.vercel.app](https://demo-nextjs-with-supabase.vercel.app/).
+### For Schools
+- **Teacher Discovery**
+  - Advanced search with filters
+  - View teacher profiles and availability
+  - Subject-based matching
+  - Experience level filtering
 
-## Deploy to Vercel
+- **Class Administration**
+  - Schedule management
+  - Past classes tracking
+  - Recording links management
+  - Direct communication with teachers
 
-Vercel deployment will guide you through creating a Supabase account and project.
+### Core Features
+- **Authentication & Authorization**
+  - Role-based access control
+  - Secure email authentication
+  - Protected routes
 
-After installation of the Supabase integration, all relevant environment variables will be assigned to the project so the deployment is fully functioning.
+- **Real-time Updates**
+  - Live class status
+  - Instant notifications
+  - Automatic calendar sync
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&project-name=nextjs-with-supabase&repository-name=nextjs-with-supabase&demo-title=nextjs-with-supabase&demo-description=This+starter+configures+Supabase+Auth+to+use+cookies%2C+making+the+user%27s+session+available+throughout+the+entire+Next.js+app+-+Client+Components%2C+Server+Components%2C+Route+Handlers%2C+Server+Actions+and+Middleware.&demo-url=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2F&external-id=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&demo-image=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2Fopengraph-image.png)
+## Tech Stack
 
-The above will also clone the Starter kit to your GitHub, you can clone that locally and develop locally.
+- **Frontend**
+  - Next.js 14 (App Router)
+  - TypeScript
+  - Tailwind CSS
+  - shadcn/ui Components
 
-If you wish to just develop locally and not deploy to Vercel, [follow the steps below](#clone-and-run-locally).
+- **Backend**
+  - Supabase (Database & Authentication)
+  - Google Calendar API
+  - Vercel (Hosting)
 
-## Clone and run locally
+## Getting Started
 
-1. You'll first need a Supabase project which can be made [via the Supabase dashboard](https://database.new)
-
-2. Create a Next.js app using the Supabase Starter template npx command
-
+1. **Prerequisites**
    ```bash
-   npx create-next-app -e with-supabase
+   Node.js 18+ 
+   npm/yarn/pnpm
    ```
 
-3. Use `cd` to change into the app's directory
-
+2. **Environment Setup**
    ```bash
-   cd name-of-new-app
+   # Clone the repository
+   git clone [repository-url]
+   cd quad
+
+   # Install dependencies
+   npm install
+
+   # Set up environment variables
+   cp .env.example .env.local
    ```
 
-4. Rename `.env.example` to `.env.local` and update the following:
-
+3. **Environment Variables**
    ```
-   NEXT_PUBLIC_SUPABASE_URL=[INSERT SUPABASE PROJECT URL]
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=[INSERT SUPABASE PROJECT API ANON KEY]
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   RESEND_API_KEY=your_resend_api_key
    ```
 
-   Both `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` can be found in [your Supabase project's API settings](https://app.supabase.com/project/_/settings/api)
-
-5. You can now run the Next.js local development server:
-
+4. **Development**
    ```bash
    npm run dev
    ```
 
-   The starter kit should now be running on [localhost:3000](http://localhost:3000/).
+## Project Structure
+app/
+├── (auth-pages)/ # Authentication related pages
+├── api/ # API routes
+├── protected/ # Protected routes
+│ ├── school/ # School dashboard and features
+│ └── teacher/ # Teacher dashboard and features
+├── components/ # Reusable UI components
+└── utils/ # Utility functions and helpers
 
-6. This template comes with the default shadcn/ui style initialized. If you instead want other ui.shadcn styles, delete `components.json` and [re-install shadcn/ui](https://ui.shadcn.com/docs/installation/next)
+## Contributing
 
-> Check out [the docs for Local Development](https://supabase.com/docs/guides/getting-started/local-development) to also run Supabase locally.
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-## Feedback and issues
+## License
 
-Please file feedback and issues over on the [Supabase GitHub org](https://github.com/supabase/supabase/issues/new/choose).
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-## More Supabase examples
+## Acknowledgments
 
-- [Next.js Subscription Payments Starter](https://github.com/vercel/nextjs-subscription-payments)
-- [Cookie-based Auth and the Next.js 13 App Router (free course)](https://youtube.com/playlist?list=PL5S4mPUpp4OtMhpnp93EFSo42iQ40XjbF)
-- [Supabase Auth and the Next.js App Router](https://github.com/supabase/supabase/tree/master/examples/auth/nextjs)
+- Powered by Bharti Airtel Foundation
+- Built with [Next.js](https://nextjs.org/)
+- Database by [Supabase](https://supabase.com/)
