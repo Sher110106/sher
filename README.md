@@ -88,14 +88,112 @@ Quad is a modern web platform that connects teachers with schools, facilitating 
    ```
 
 ## Project Structure
+
+```
 app/
-├── (auth-pages)/ # Authentication related pages
-├── api/ # API routes
-├── protected/ # Protected routes
-│ ├── school/ # School dashboard and features
-│ └── teacher/ # Teacher dashboard and features
-├── components/ # Reusable UI components
-└── utils/ # Utility functions and helpers
+├── (auth-pages)/                # Authentication related pages
+│   ├── sign-in/                 # Sign in page and components
+│   ├── sign-up/                 # Sign up page with role selection
+│   └── confirm/                 # Email confirmation handling
+│
+├── api/                         # API routes
+│   ├── auth/                    # Authentication endpoints
+│   │   ├── google/             # Google OAuth handling
+│   │   └── callback/           # OAuth callback handling
+│   ├── school/                 # School-related endpoints
+│   │   └── update/            # School profile updates
+│   ├── teachers/              # Teacher-related endpoints
+│   │   ├── search/           # Teacher search functionality
+│   │   └── update/           # Teacher profile updates
+│   └── webhooks/             # Webhook handlers
+│       └── teaching-requests # Teaching request management
+│
+├── protected/                  # Protected routes (authenticated users only)
+│   ├── school/               # School-specific pages
+│   │   ├── dashboard/       # School dashboard
+│   │   ├── teachers/        # Teacher search and management
+│   │   ├── past_classes/    # Past classes management
+│   │   └── edit/           # School profile editing
+│   │
+│   └── teacher/            # Teacher-specific pages
+│       ├── dashboard/      # Teacher dashboard
+│       ├── schedule/       # Availability management
+│       ├── past_classes/   # Class history and recordings
+│       └── edit/          # Teacher profile editing
+│
+├── components/             # Reusable UI components
+│   ├── ui/               # Base UI components (shadcn/ui)
+│   ├── forms/           # Form-related components
+│   └── layout/          # Layout components
+│
+└── utils/               # Utility functions and helpers
+    ├── supabase/       # Supabase client configuration
+    │   ├── client.ts   # Client-side Supabase instance
+    │   └── server.ts   # Server-side Supabase instance
+    ├── google-auth.ts  # Google OAuth configuration
+    ├── google-meet.ts  # Google Meet integration
+    └── types/         # TypeScript type definitions
+
+public/               # Static files
+├── images/          # Image assets
+└── icons/          # Icon assets
+
+styles/             # Global styles
+└── globals.css    # Global CSS and Tailwind imports
+```
+
+### Key Directories and Files
+
+#### Authentication (`app/(auth-pages)/`)
+- Handles user authentication flow
+- Implements role-based signup (teacher/school)
+- Manages email confirmation and OAuth
+
+#### API Routes (`app/api/`)
+- RESTful endpoints for data operations
+- Webhook handlers for real-time updates
+- Authentication callback handlers
+
+#### Protected Routes (`app/protected/`)
+- Role-specific dashboards and features
+- Profile management interfaces
+- Class scheduling and management
+
+#### Components (`components/`)
+- Reusable UI components built with shadcn/ui
+- Form components with validation
+- Layout components for consistent UI
+
+#### Utilities (`utils/`)
+- Database client configuration
+- Third-party service integrations
+- TypeScript interfaces and types
+
+### Database Schema
+
+```sql
+tables/
+├── school_profiles        # School information
+├── teacher_profiles      # Teacher information
+├── teaching_requests    # Class scheduling requests
+├── meeting_details     # Online class details
+├── user_google_tokens # OAuth tokens
+└── availability      # Teacher availability slots
+```
+
+### Key Features by Directory
+
+#### School Features (`app/protected/school/`)
+- Teacher search and filtering
+- Class scheduling
+- Past class management
+- Recording management
+
+#### Teacher Features (`app/protected/teacher/`)
+- Availability management
+- Class schedule viewing
+- Profile management
+- Past class access
 
 ## Contributing
 
