@@ -80,6 +80,9 @@ Quad is a modern web platform that connects teachers with schools, facilitating 
    NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
    RESEND_API_KEY=your_resend_api_key
+   GOOGLE_CLIENT_ID=your_google_cliend_id
+   GOOGLE_CLIENT_SECRET=your_client_secret
+   NEXT_PUBLIC_BASE_URL=your_public_url
    ```
 
 4. **Development**
@@ -134,13 +137,8 @@ app/
     ├── google-meet.ts  # Google Meet integration
     └── types/         # TypeScript type definitions
 
-public/               # Static files
-├── images/          # Image assets
-└── icons/          # Icon assets
 
-styles/             # Global styles
-└── globals.css    # Global CSS and Tailwind imports
-```
+
 
 ### Key Directories and Files
 
