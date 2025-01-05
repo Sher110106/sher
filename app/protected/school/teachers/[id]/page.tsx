@@ -79,51 +79,62 @@ export default function TeacherDetail() {
   const handleSubmit = async () => {
     try {
       setIsSubmitting(true);
-
-      // Validate form data
+  
       if (!formData.subject || !formData.date || !formData.time) {
         throw new Error("Please fill in all fields");
       }
-      
-      const response = await fetch('/api/teaching-requests', {
-        method: 'POST',
+  
+      // Convert time to hh:mm AM/PM format
+      const timeParts = formData.time.split(":");
+      let hours = parseInt(timeParts[0], 10);
+      const minutes = timeParts[1];
+      const isPM = hours >= 12;
+      hours = hours % 12 || 12; // Convert 0 to 12 for 12 AM
+      const formattedTime = `${hours}:${minutes} ${isPM ? "PM" : "AM"}`;
+  
+      const response = await fetch("/api/teaching-requests", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           teacher_id: id,
           subject: formData.subject,
           schedule: {
             date: formData.date,
-            time: formData.time
-          }
+            time: formattedTime,
+          },
         }),
       });
-
+  
       const data = await response.json();
-      
+  
       if (!response.ok) {
         throw new Error(data.error || "Failed to submit request");
       }
-
+  
       toast({
         title: "Success",
         description: "Teaching request has been sent successfully",
         variant: "default",
       });
-      
+  
       setShowDialog(false);
     } catch (error) {
       console.error("Error submitting request:", error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to submit teaching request",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to submit teaching request",
         variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
     }
   };
+  
 
   if (loading) return <p>Loading...</p>;
   if (!teacher) return <p>Teacher not found</p>;
