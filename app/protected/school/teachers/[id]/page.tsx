@@ -91,6 +91,7 @@ export default function TeacherDetail() {
       const isPM = hours >= 12;
       hours = hours % 12 || 12; // Convert 0 to 12 for 12 AM
       const formattedTime = `${hours}:${minutes} ${isPM ? "PM" : "AM"}`;
+      console.log("Formatted time:", formattedTime);
   
       const response = await fetch("/api/teaching-requests", {
         method: "POST",
