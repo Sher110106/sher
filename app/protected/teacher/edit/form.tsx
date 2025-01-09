@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
 interface TeacherFormData {
     full_name: string;
@@ -112,6 +113,8 @@ const TeacherEditForm: React.FC<TeacherEditFormProps> = ({ initialData }) => {
                             placeholder="Enter years of experience"
                         />
                     </div>
+
+                    
 
                     {/* Add subject and qualification selection UI here */}
                 </CardContent>

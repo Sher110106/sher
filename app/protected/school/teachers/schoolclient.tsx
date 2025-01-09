@@ -12,6 +12,7 @@ interface Teacher {
   subjects: string[];
   qualifications: string[];
   experience_years: number;
+  teaching_grade: number;
   availability: {
     schedule: Array<{
       day: string;
@@ -28,9 +29,9 @@ interface FilterState {
   minExperience: number;
   maxExperience: number;
   qualifications: string[];
+  teaching_grade: number | null;
   availability: {
     day: string;
-    time?: string;
     startTime?: string;
     endTime?: string;
   } | null;
@@ -50,6 +51,7 @@ export default function SchoolClient() {
     minExperience: 0,
     maxExperience: 100,
     qualifications: [],
+    teaching_grade: null,
     availability: null,
     sortBy: 'experience_desc'
   });
@@ -75,6 +77,9 @@ export default function SchoolClient() {
       }
       if (filters.qualifications.length) {
         queryParams.set('qualifications', filters.qualifications.join(','));
+      }
+      if (filters.teaching_grade) {
+        queryParams.set('teaching_grade', filters.teaching_grade.toString());
       }
       if (filters.availability) {
         queryParams.set('availability', JSON.stringify(filters.availability));
@@ -117,7 +122,15 @@ export default function SchoolClient() {
   }, [filters]);
 
   const handleFilterChange = (key: keyof FilterState, value: any) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+    if (key === 'minExperience' || key === 'maxExperience') {
+      // Parse the value and handle invalid numbers
+      const numValue = parseInt(value);
+      // If value is empty or NaN, set to default (0 for min, 100 for max)
+      const validValue = isNaN(numValue) ? (key === 'minExperience' ? 0 : 100) : numValue;
+      setFilters(prev => ({ ...prev, [key]: validValue }));
+    } else {
+      setFilters(prev => ({ ...prev, [key]: value }));
+    }
   };
 
   // Navigate to Teacher Detail Page
@@ -149,8 +162,8 @@ export default function SchoolClient() {
                 type="number"
                 min={0}
                 max={filters.maxExperience}
-                value={filters.minExperience}
-                onChange={(e) => handleFilterChange('minExperience', parseInt(e.target.value))}
+                value={filters.minExperience.toString()}
+                onChange={(e) => handleFilterChange('minExperience', e.target.value)}
                 className="w-20"
               />
               <span>to</span>
@@ -158,8 +171,8 @@ export default function SchoolClient() {
                 type="number"
                 min={filters.minExperience}
                 max={100}
-                value={filters.maxExperience}
-                onChange={(e) => handleFilterChange('maxExperience', parseInt(e.target.value))}
+                value={filters.maxExperience.toString()}
+                onChange={(e) => handleFilterChange('maxExperience', e.target.value)}
                 className="w-20"
               />
             </div>
@@ -227,6 +240,25 @@ export default function SchoolClient() {
               </SelectContent>
             </Select>
           </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Grade Level</label>
+            <Select
+              value={filters.teaching_grade?.toString() || 'any'}
+              onValueChange={(value) => handleFilterChange('teaching_grade', value === 'any' ? null : parseInt(value))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select grade" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="any">Any Grade</SelectItem>
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((grade) => (
+                  <SelectItem key={grade} value={grade.toString()}>
+                    Grade {grade}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </Card>
 
@@ -243,6 +275,7 @@ export default function SchoolClient() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
                     <p><span className="font-medium">Subjects:</span> {teacher.subjects.join(", ")}</p>
                     <p><span className="font-medium">Experience:</span> {teacher.experience_years} years</p>
+                    <p><span className="font-medium">Grade Level:</span> {teacher.teaching_grade ? `Grade ${teacher.teaching_grade}` : 'Not specified'}</p>
                     <p><span className="font-medium">Qualifications:</span> {teacher.qualifications.join(", ")}</p>
                     <p>
                       <span className="font-medium">Availability:</span>{" "}

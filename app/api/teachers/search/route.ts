@@ -37,6 +37,7 @@ export async function GET(req: Request) {
         subjects,
         qualifications,
         experience_years,
+        teaching_grade,
         availability
       `)
       .order("experience_years", { ascending: false })
@@ -71,6 +72,14 @@ export async function GET(req: Request) {
             }
           }])
         );
+      }
+    }
+
+    // Add grade to the query building
+    if (searchParams.get("teaching_grade")) {
+      const teaching_grade = parseInt(searchParams.get("teaching_grade") || "0");
+      if (!isNaN(teaching_grade) && teaching_grade > 0) {
+        query = query.eq("teaching_grade", teaching_grade);
       }
     }
 

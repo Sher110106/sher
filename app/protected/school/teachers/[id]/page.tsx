@@ -16,6 +16,7 @@ interface Teacher {
   subjects: string[];
   qualifications: string[];
   experience_years: number;
+  teaching_grade: number;
   availability: {
     schedule: Array<{
       day: string;
@@ -208,6 +209,9 @@ export default function TeacherDetail() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <p><strong>Subjects:</strong> {teacher.subjects?.join(", ") || "No subjects listed"}</p>
               <p><strong>Experience:</strong> {teacher.experience_years} years</p>
+              <p><strong>Grade Level:</strong> {
+                teacher.teaching_grade ? `Grade ${teacher.teaching_grade}` : "Not specified"
+              }</p>
               <p><strong>Qualifications:</strong> {teacher.qualifications?.join(", ") || "No qualifications listed"}</p>
               <p>
                       <span className="font-medium"><strong>Availability:</strong></span>{" "}
