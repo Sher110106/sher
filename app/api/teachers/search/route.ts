@@ -13,7 +13,7 @@ export async function GET(req: Request) {
   try {
     const supabase = await createClient();
     const user=supabase.auth.getUser();
-    console.log(user);
+    
     const { searchParams } = new URL(req.url);
     
     // Parse search parameters

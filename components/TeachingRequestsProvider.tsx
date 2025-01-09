@@ -1,9 +1,16 @@
-'use client';
-
-import { createClient } from "@/utils/supabase/client";
-import { useEffect, useState } from 'react';
-import { format } from 'date-fns';
+'use client'
+import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
+import { 
+  Card,
+  CardContent,
+} from "@/components/ui/card";
+
+interface Schedule {
+  day: string;
+  startTime: string;
+  endTime: string;
+}
 
 interface TeachingRequest {
   id: string;
@@ -11,37 +18,99 @@ interface TeachingRequest {
   teacher_id: string;
   status: string;
   created_at: string;
+  subject: string;
+  schedule: Schedule[] | null;
   school: {
     school_name: string;
-    state: string,
-    district: string,
-    cluster: string,
-    block: string
+    state: string;
+    district: string;
+    cluster: string;
+    block: string;
   };
 }
 
-export function TeachingRequestsList({ 
-  initialRequests 
-}: { 
-  initialRequests: TeachingRequest[] 
-}) {
-  const [requests, setRequests] = useState<TeachingRequest[]>(initialRequests);
-  const [loading, setLoading] = useState<{ [key: string]: boolean }>({});
-  const [userId, setUserId] = useState<string | null>(null);
-  const supabase = createClient();
+interface Props {
+  initialRequests: TeachingRequest[];
+  supabase: any;
+  userId: string;
+}
 
-  // Get current user on mount
-  useEffect(() => {
-    async function getCurrentUser() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setUserId(user.id);
-        // Filter initial requests for current user
-        setRequests(initialRequests.filter(req => req.teacher_id === user.id));
-      }
+interface DatabaseChangePayload {
+  new: {
+    id: string;
+    teacher_id: string;
+    [key: string]: any;
+  };
+}
+
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  const options: Intl.DateTimeFormatOptions = {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  };
+  return new Intl.DateTimeFormat('en-US', options).format(date);
+};
+
+const parseSchedule = (scheduleData: any): Schedule[] => {
+  try {
+    const schedule = typeof scheduleData === 'string' 
+      ? JSON.parse(scheduleData) 
+      : scheduleData;
+    
+    // Handle single schedule object
+    if (schedule && !Array.isArray(schedule)) {
+      const date = new Date(schedule.date);
+      return [{
+        day: date.toLocaleDateString('en-US', { weekday: 'long' }),
+        startTime: schedule.time,
+        endTime: '' // Remove end time
+      }];
     }
-    getCurrentUser();
-  }, [initialRequests]);
+    
+    return Array.isArray(schedule) ? schedule : [];
+  } catch (error) {
+    console.error('Error parsing schedule:', error);
+    return [];
+  }
+};
+
+const formatSchedule = (scheduleData: any): string => {
+  if (!scheduleData) return 'No schedule set';
+  
+  const schedule = parseSchedule(scheduleData);
+  if (schedule.length === 0) return 'No schedule set';
+
+  return schedule.map(slot => {
+    const date = new Date(scheduleData.date);
+    return `${date.toLocaleDateString('en-US', { weekday: 'long' })}: ${scheduleData.time}`;
+  }).join(', ');
+};
+
+export function TeachingRequestsList({ 
+  initialRequests,
+  supabase,
+  userId
+}: Props) {
+  const [requests, setRequests] = useState<TeachingRequest[]>(() => 
+    initialRequests
+      .filter(req => req.teacher_id === userId)
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+  );
+  const [loading, setLoading] = useState<{ [key: string]: boolean }>({});
+
+  useEffect(() => {
+    if (userId) {
+      setRequests(initialRequests
+        .filter(req => req.teacher_id === userId)
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      );
+    }
+  }, [initialRequests, userId]);
 
   const handleStatusUpdate = async (requestId: string, newStatus: 'accepted' | 'rejected') => {
     if (!userId) return;
@@ -53,11 +122,10 @@ export function TeachingRequestsList({
         .from('teaching_requests')
         .update({ status: newStatus })
         .eq('id', requestId)
-        .eq('teacher_id', userId); // Ensure teacher can only update their own requests
+        .eq('teacher_id', userId);
 
       if (error) throw error;
 
-      // Update local state
       setRequests(prev =>
         prev.map(request =>
           request.id === requestId
@@ -84,8 +152,7 @@ export function TeachingRequestsList({
           schema: 'public',
           table: 'teaching_requests',
         },
-        async (payload) => {
-          // Only add if the new request belongs to the current teacher
+        async (payload: DatabaseChangePayload) => {
           if (payload.new.teacher_id !== userId) return;
 
           const { data: newRequest, error } = await supabase
@@ -119,8 +186,7 @@ export function TeachingRequestsList({
           schema: 'public',
           table: 'teaching_requests',
         },
-        async (payload) => {
-          // Only update if the request belongs to the current teacher
+        async (payload: DatabaseChangePayload) => {
           if (payload.new.teacher_id !== userId) return;
 
           setRequests(prev =>
@@ -144,57 +210,67 @@ export function TeachingRequestsList({
   return (
     <div className="space-y-4">
       {requests.map((request) => (
-        <div
-          key={request.id}
-          className="p-4 bg-white rounded-lg shadow hover:shadow-md transition-shadow"
-        >
-          <div className="flex justify-between items-start">
-            <div>
-              <h3 className="font-semibold text-lg">
-                {request.school.school_name}
-              </h3>
-            
-              <p className="text-sm text-gray-500 mt-1">
-                Received {format(new Date(request.created_at), 'PPp')}
-              </p>
-            </div>
-            <div className="flex flex-col items-end gap-2">
-              <span
-                className={`px-3 py-1 rounded-full text-sm ${
-                  request.status === 'pending'
-                    ? 'bg-yellow-100 text-yellow-800'
-                    : request.status === 'accepted'
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-red-100 text-red-800'
-                }`}
-              >
-                {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
-              </span>
-              
-              {request.status === 'pending' && (
-                <div className="flex gap-2 mt-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleStatusUpdate(request.id, 'rejected')}
-                    disabled={loading[request.id]}
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                  >
-                    Reject
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={() => handleStatusUpdate(request.id, 'accepted')}
-                    disabled={loading[request.id]}
-                    className="bg-green-600 hover:bg-green-700"
-                  >
-                    Accept
-                  </Button>
+        <Card key={request.id} className="hover:shadow-md transition-shadow">
+          <CardContent className="p-6">
+            <div className="flex justify-between items-start">
+              <div className="space-y-2">
+                <h3 className="font-semibold text-lg">
+                  {request.school.school_name}
+                </h3>
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-600">
+                    <span className="font-medium">Subject:</span> {request.subject || 'Not specified'}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    <span className="font-medium">Location:</span> {request.school.block}, {request.school.cluster}, {request.school.district}, {request.school.state}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    <span className="font-medium">Schedule:</span> {formatSchedule(request.schedule)}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    <span className="font-medium">Requested on:</span> {formatDate(request.created_at)}
+                  </p>
                 </div>
-              )}
+              </div>
+              
+              <div className="flex flex-col items-end gap-2">
+                <span
+                  className={`px-3 py-1 rounded-full text-sm ${
+                    request.status === 'pending'
+                      ? 'bg-yellow-100 text-yellow-800'
+                      : request.status === 'accepted'
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-red-100 text-red-800'
+                  }`}
+                >
+                  {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                </span>
+                
+                {request.status === 'pending' && (
+                  <div className="flex gap-2 mt-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleStatusUpdate(request.id, 'rejected')}
+                      disabled={loading[request.id]}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      Reject
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => handleStatusUpdate(request.id, 'accepted')}
+                      disabled={loading[request.id]}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      Accept
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       ))}
       
       {requests.length === 0 && (
@@ -205,3 +281,5 @@ export function TeachingRequestsList({
     </div>
   );
 }
+
+export default TeachingRequestsList;
