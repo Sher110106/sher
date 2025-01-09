@@ -11,6 +11,8 @@ The application is currently hosted at: https://sher-sable.vercel.app
 You should read this project on github 
 Github Repo Link : https://github.com/Sher110106/sher/tree/main
 and Please watch this tutorial on how the app functions : https://youtu.be/BQWEys91EJA
+Please make sure to make a file named .env.local and fill in the values from the env.txt file and also run npm install. 
+
 
 **Important**: Please test the application on the hosted version only, as all API redirect URLs and configurations are set specifically for this deployment.
 
