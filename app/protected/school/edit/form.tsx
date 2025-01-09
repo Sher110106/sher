@@ -21,7 +21,7 @@ interface SchoolFormData {
     district: string;
     cluster: string;
     block: string;
-    curriculumType: string;
+    
 }
 
 interface SchoolEditFormProps {
@@ -144,22 +144,7 @@ const SchoolEditForm: React.FC<SchoolEditFormProps> = ({ initialData }) => {
                         />
                     </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="curriculumType">Curriculum Type</Label>
-                        <Select 
-                            value={formData.curriculumType}
-                            onValueChange={(value) => handleChange('curriculumType', value)}
-                        >
-                            <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Select curriculum type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="state">State Board</SelectItem>
-                                <SelectItem value="cbse">CBSE</SelectItem>
-                                <SelectItem value="icse">ICSE</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
+                   
                 </CardContent>
                 <CardFooter>
                     <Button 

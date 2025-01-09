@@ -18,7 +18,6 @@ export const signUpAction = async (formData: FormData) => {
   const district = formData.get("district")?.toString();
   const cluster = formData.get("cluster")?.toString();
   const block = formData.get("block")?.toString();
-  const curriculumType = formData.get("curriculumType")?.toString();
   
   // Teacher specific fields
   const fullName = formData.get("fullName")?.toString();
@@ -41,7 +40,7 @@ export const signUpAction = async (formData: FormData) => {
   }
 
   // Role-specific validation
-  if (role === 'school' && (!schoolName || !state || !district || !cluster || !block || !curriculumType)) {
+  if (role === 'school' && (!schoolName || !state || !district || !cluster || !block)) {
     return encodedRedirect("error", "/sign-up", "All school fields are required");
   }
 
@@ -115,7 +114,6 @@ export const signUpAction = async (formData: FormData) => {
       district: district,
       cluster: cluster,
       block: block,
-      curriculum_type: curriculumType,
       email: email
     };
 

@@ -32,7 +32,6 @@ export async function POST(request: NextRequest) {
                 district: formData.district,
                 cluster: formData.cluster,
                 block: formData.block,
-                curriculum_type: formData.curriculumType,
                 updated_at: new Date().toISOString()
             })
             .eq('id', schoolProfile.id);

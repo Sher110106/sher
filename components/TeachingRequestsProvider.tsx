@@ -16,8 +16,7 @@ interface TeachingRequest {
     state: string,
     district: string,
     cluster: string,
-    block: string,
-    curriculum_type: string;
+    block: string
   };
 }
 
@@ -98,8 +97,7 @@ export function TeachingRequestsList({
                 state,
                 district,
                 cluster,
-                block,
-                curriculum_type
+                block
               )
             `)
             .eq('id', payload.new.id)
@@ -155,9 +153,7 @@ export function TeachingRequestsList({
               <h3 className="font-semibold text-lg">
                 {request.school.school_name}
               </h3>
-              <p className="text-gray-600">
-                {request.school.block} • {request.school.curriculum_type}
-              </p>
+            
               <p className="text-sm text-gray-500 mt-1">
                 Received {format(new Date(request.created_at), 'PPp')}
               </p>

@@ -133,8 +133,6 @@ export default function Signup(props: { searchParams: Promise<Message>; }) {
               <Label htmlFor="block">Block</Label>
               <Input name="block" placeholder="Block" required />
 
-              <Label htmlFor="curriculumType">Curriculum Type</Label>
-              <Input name="curriculumType" placeholder="Curriculum Type" required />
 
               
             </>

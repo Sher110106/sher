@@ -1,6 +1,135 @@
 # Quad - Educational Platform
-
+https://sher-sable.vercel.app
 Quad is a modern web platform that connects teachers with schools, facilitating online teaching and class management. Built with Next.js 14, Supabase, and TypeScript.
+
+# User Flow Guide
+
+## Deployment Note
+
+### Testing the Application
+The application is currently hosted at: https://sher-sable.vercel.app
+
+**Important**: Please test the application on the hosted version only, as all API redirect URLs and configurations are set specifically for this deployment.
+
+### Test Credentials
+For testing purposes, you can use the following credentials:
+
+**School Account:**
+- Email: scraperid5@gmail.com
+- Password: 1234567
+
+**Teacher Account:**
+- Email: sherpartap1101@gmail.com
+- Password: 123456
+
+### Google OAuth Testing
+Currently, Google OAuth is in testing mode pending verification (estimated 3-4 weeks). During this period, you can use the following test account for Google OAuth integration:
+- Email: bugzerrr@gmail.com
+- Password: Quad1234$
+
+### Technical Implementation Notes
+- Email notifications are handled through Resend email service
+- Base URLs in Supabase and Google Cloud Console are configured for the hosted version
+- Registration and sign-up features are only available on the hosted version
+
+
+
+## Registration and Authentication Process
+1. Initial Sign Up
+   - Choose your role (School or Teacher)
+   - Fill in required profile information
+   - Submit registration form
+   - Click confirmation link sent to your email
+   - Account is activated upon confirmation
+
+2. Sign In
+   - Common sign-in page for all users
+   - Users are automatically redirected to their role-specific dashboard
+
+## Teacher Flow
+
+### Dashboard Features
+1. Request Management
+   - View incoming teaching requests
+   - Accept or reject requests
+   - First-time acceptance requires Google OAuth authorization
+   - Upon authorization, calendar access is granted for automatic scheduling
+
+### Profile Management
+1. Availability Settings
+   - Access schedule management via dashboard
+   - Set available time slots
+   - Update recurring availability
+   - Changes reflect immediately in school search results
+
+2. Profile Editing
+   - Update personal information
+   - Modify teaching subjects
+   - Update qualifications
+   - Add/edit teaching experience
+
+### Class Management
+1. Upcoming Classes
+   - View scheduled classes
+   - Access Google Meet links
+   - Track class status
+
+2. Past Classes
+   - View complete teaching history
+   - Add/update recording links
+   - Access class details and notes
+
+## School Flow
+
+### Teacher Discovery
+1. Search Interface
+   - Access teacher search page
+   - Apply multiple filters:
+     - Subject expertise
+     - Availability
+     - Experience level
+     - Rating
+   - Sort results by various parameters
+   - View detailed teacher profiles
+
+2. Booking Process
+   - Select desired teacher
+   - Choose available time slot
+   - Specify subject and class details
+   - Submit teaching request
+   - Receive confirmation email
+
+### Management Features
+1. Profile Management
+   - Edit school information
+   - Update contact details
+   - Modify school preferences
+
+2. Class Tracking
+   - View upcoming classes
+   - Access past class records
+   - Manage recording links
+   - Track teacher interactions
+
+## Recording Implementation Note
+
+### Current Implementation
+- Manual recording link updates available for both teachers and schools
+- Recording links can be added post-class to the past classes section
+
+### Automatic Recording Limitations
+Due to technical requirements, automatic recording features could not be implemented. This would require:
+- Google Workspace Enterprise account for Google Meet automatic recordings
+- Zoom Pro account for Zoom automatic recordings
+
+These features may be implemented in future versions when enterprise accounts are available.
+
+## Email Notifications
+- Both teachers and schools receive email notifications for:
+  - New teaching requests
+  - Request acceptances/rejections
+  - Class schedule confirmations
+ 
 
 ## Features
 
@@ -210,3 +339,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - Powered by Bharti Airtel Foundation
 - Built with [Next.js](https://nextjs.org/)
 - Database by [Supabase](https://supabase.com/)
+- Emails by [Resend](https://resend.com/)

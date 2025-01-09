@@ -26,8 +26,7 @@ export default async function TeacherDashboard() {
         state,
         district,
         cluster,
-        block,
-        curriculum_type
+        block
       )
     `)
     .order('created_at', { ascending: false });

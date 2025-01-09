@@ -27,7 +27,7 @@ export default async function SchoolEditPage() {
         district: schoolData?.district || '',
         cluster: schoolData?.cluster || '',
         block: schoolData?.block || '',
-        curriculumType: schoolData?.curriculum_type || ''
+      
     };
 
     return (
