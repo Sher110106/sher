@@ -8,11 +8,14 @@ Quad is a modern web platform that connects teachers with schools, facilitating 
 
 ### Testing the Application
 The application is currently hosted at: https://sher-sable.vercel.app
+You should read this project on github 
+Github Repo Link : https://github.com/Sher110106/sher/tree/main
+and Please watch this tutorial on how the app functions : https://youtu.be/BQWEys91EJA
 
 **Important**: Please test the application on the hosted version only, as all API redirect URLs and configurations are set specifically for this deployment.
 
 ### Test Credentials
-For testing purposes, you can use the following credentials:
+For testing purposes, you can use the following credentials and directly log in to the application:
 
 **School Account:**
 - Email: scraperid5@gmail.com
@@ -24,6 +27,8 @@ For testing purposes, you can use the following credentials:
 
 ### Google OAuth Testing
 Currently, Google OAuth is in testing mode pending verification (estimated 3-4 weeks). During this period, you can use the following test account for Google OAuth integration:
+So use any email id to register for either teacher or school
+but when you are accepting the request for first time in teacher dashboard then you would be required to use a google oauth and currently this app is in testing mode due to which only the liseted ids can be used so then just login with this gmail and then you can do that google oauth. But Please register with your own account.
 - Email: bugzerrr@gmail.com
 - Password: Quad1234$
 
