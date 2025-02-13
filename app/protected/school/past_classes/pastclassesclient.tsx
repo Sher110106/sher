@@ -17,6 +17,8 @@ interface ClassDetails {
         subjects: string[];
     };
     created_at: string;
+    rating?: number;
+    avg_rating?: number;
 }
 
 interface PastClassesClientProps {
@@ -27,7 +29,92 @@ export default function PastClassesClient({ initialClasses }: PastClassesClientP
     const [classes, setClasses] = useState<ClassDetails[]>(initialClasses);
     const [loading, setLoading] = useState<string | null>(null);
     const supabase = createClient();
-
+    const handleRatingSubmit = async (classId: string, rating: number) => {
+        if (rating < 1 || rating > 5) {
+            alert('Invalid rating value');
+            return;
+        }
+    
+        setLoading(classId);
+        try {
+            // 1. Get current user
+            const { data: { user }, error: userError } = await supabase.auth.getUser();
+            
+            if (userError || !user) {
+                throw new Error('Authentication required');
+            }
+    
+            // 2. Get meeting details with teacher ID
+            const { data: meeting, error: meetingError } = await supabase
+                .from('meeting_details')
+                .select('teaching_request_id, teacher_id')
+                .eq('id', classId)
+                .single();
+    
+            if (meetingError || !meeting?.teaching_request_id) {
+                throw new Error('Class details not found');
+            }
+    
+            // 3. Verify school participation
+            const { data: teachingRequest, error: requestError } = await supabase
+                .from('teaching_requests')
+                .select('school_id')
+                .eq('id', meeting.teaching_request_id)
+                .single();
+    
+            if (requestError || !teachingRequest) {
+                throw new Error('Failed to verify class ownership');
+            }
+    
+            if (teachingRequest.school_id !== user.id) {
+                throw new Error('Only participating schools can rate classes');
+            }
+    
+            // 4. Update class rating
+            const { error: updateError } = await supabase
+                .from('meeting_details')
+                .update({ rating })
+                .eq('id', classId);
+    
+            if (updateError) throw updateError;
+    
+            // 5. Calculate new average rating
+            const { data: allRatings, error: ratingsError } = await supabase
+                .from('meeting_details')
+                .select('rating')
+                .eq('teacher_id', meeting.teacher_id)
+                .not('rating', 'is', null);
+    
+            if (ratingsError) throw new Error('Failed to calculate average rating');
+    
+            const totalRatings = allRatings.reduce((acc, curr) => acc + (curr.rating || 0), 0);
+            const avgRating = allRatings.length > 0 
+                ? Number((totalRatings / allRatings.length).toFixed(2))
+                : 0;
+    
+            // 6. Update teacher's average rating
+            const { error: avgUpdateError } = await supabase
+                .from('teacher_profiles')
+                .update({ avg_rating: avgRating })
+                .eq('id', meeting.teacher_id);
+    
+            if (avgUpdateError) throw new Error('Failed to update average rating');
+    
+            // Update local state with both ratings
+            setClasses(prev => prev.map(cls => 
+                cls.id === classId 
+                    ? { ...cls, rating, avg_rating: avgRating }
+                    : cls
+            ));
+    
+        } catch (error) {
+            console.error('Error updating rating:', error);
+            alert(error instanceof Error ? error.message : 'Rating update failed');
+        } finally {
+            setLoading(null);
+        }
+    };
+    
     const handleRecordingUpdate = async (classId: string, recordingLink: string) => {
         setLoading(classId);
         try {
@@ -105,9 +192,29 @@ export default function PastClassesClient({ initialClasses }: PastClassesClientP
                                 )}
                             </div>
                         </div>
+                        <div className="space-y-2">
+                            <p className="text-sm font-medium">Class Rating</p>
+                            <select 
+                                value={cls.rating || 0}
+                                onChange={(e) => handleRatingSubmit(cls.id, Number(e.target.value))}
+                                className="border rounded-md p-2 w-full"
+                                disabled={loading === cls.id}
+                            >
+                                <option value="0">Rate this class</option>
+                                {[1, 2, 3, 4, 5].map(num => (
+                                    <option key={num} value={num}>{num} Stars</option>
+                                ))}
+                            </select>
+                            {cls.avg_rating && (
+                                <p className="text-sm text-muted-foreground">
+                                    Teacher Average: {cls.avg_rating}/5
+                                </p>
+                            )}
+                        </div>
+
                     </CardContent>
                 </Card>
             ))}
         </div>
     );
-} 
+}
