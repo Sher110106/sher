@@ -168,45 +168,40 @@ if (role === 'teacher') {
 
 };
 export const forgotPasswordAction = async (formData: FormData) => {
-  try {
-    const email = formData.get("email")?.toString();
-    const callbackUrl = formData.get("callbackUrl")?.toString();
-    const supabase = await createClient();
-    const origin = (await headers()).get("origin");
+  console.log('function called');
+  const email = formData.get("email")?.toString();
+ 
+  const supabase = await createClient();
+  const origin = (await headers()).get("origin");
+  const callbackUrl = formData.get("callbackUrl")?.toString();
+  
 
-    if (!origin) {
-      throw new Error("Origin not found");
-    }
+  if (!email) {
+    return encodedRedirect("error", "/forgot-password", "Email is required");
+  }
 
-    if (!email) {
-      return encodedRedirect("error", "/forgot-password", "Email is required");
-    }
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${origin}/auth/callback?next=/sign-in`,
+  });
 
-    // Reset password with proper redirect handling
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${origin}/auth/callback?redirect_to=${callbackUrl || '/sign-in'}`,
-    });
-
-    if (error) {
-      throw error;
-    }
-
-    // Handle successful password reset
-    const redirectPath = callbackUrl || "/forgot-password";
-    return encodedRedirect(
-      "success",
-      redirectPath,
-      "Check your email for a password reset link."
-    );
-
-  } catch (error) {
-    console.error("Password reset error:", error);
+  if (error) {
+    console.error(error.message);
     return encodedRedirect(
       "error",
       "/forgot-password",
-      error instanceof Error ? error.message : "Could not reset password"
+      "Could not reset password",
     );
   }
+
+  if (callbackUrl) {
+    return redirect(callbackUrl);
+  }
+
+  return encodedRedirect(
+    "success",
+    "/forgot-password",
+    "Check your email for a link to reset your password.",
+  );
 };
 
 export const resetPasswordAction = async (formData: FormData) => {
