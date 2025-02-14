@@ -36,7 +36,7 @@ export default async function School(){
               <Button>Past Classes</Button>
             </Link>
             </div>
-            <div>
+            <div className='pt-5'>
             <Link  href="/protected/school/automated-requests" >
               <Button>Automate Teacher Finding</Button>
             </Link>

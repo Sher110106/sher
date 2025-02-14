@@ -173,11 +173,7 @@ export default function AutomatedRequestsPage() {
       fetchRequests()
 
     } catch (error) {
-      toast({
-        title: "Submission failed",
-        description: error instanceof Error ? error.message : "Unknown error occurred",
-        variant: "destructive"
-      })
+      
     } finally {
       setIsSubmitting(false)
     }
