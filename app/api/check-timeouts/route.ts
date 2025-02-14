@@ -1,4 +1,3 @@
-// app/api/check-timeouts/route.ts
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 
@@ -6,32 +5,18 @@ export async function GET() {
   const supabase = await createClient();
   
   try {
-    // Get expired requests
+    // Process expired requests in batches
     const { data: expiredRequests } = await supabase
       .from('teaching_requests')
       .select('*')
       .lte('timeout_at', new Date().toISOString())
-      .eq('status', 'pending');
+      .eq('status', 'pending')
+      .limit(10); // Process 10 at a time
 
-    if (!expiredRequests?.length) {
-      return NextResponse.json({ processed: 0 });
-    }
-
-    let processedCount = 0;
-
-    for (const request of expiredRequests) {
-      // Find next best teacher
-      const { data: teachers } = await supabase
-        .from('teacher_profiles')
-        .select('id')
-        .contains('subjects', [request.subject])
-        .gte('teaching_grade', request.grade_level)
-        .not('id', 'in', `(${request.previous_teachers?.join(',') || ''})`)
-        .order('avg_rating', { ascending: false })
-        .limit(1);
-
-      if (!teachers?.length) {
-        // Mark as failed if no teachers found
+    for (const request of expiredRequests || []) {
+      const fallbackTeachers = request.fallback_teachers || [];
+      
+      if (fallbackTeachers.length === 0) {
         await supabase
           .from('teaching_requests')
           .update({ status: 'failed' })
@@ -39,20 +24,20 @@ export async function GET() {
         continue;
       }
 
-      // Update request with new teacher
+      // Move to next teacher
+      const nextTeacher = fallbackTeachers.shift();
+      
       await supabase
         .from('teaching_requests')
         .update({
-          teacher_id: teachers[0].id,
-          previous_teachers: [...(request.previous_teachers || []), request.teacher_id],
+          teacher_id: nextTeacher,
+          fallback_teachers: fallbackTeachers,
           timeout_at: new Date(Date.now() + 7200 * 1000).toISOString()
         })
         .eq('id', request.id);
-
-      processedCount++;
     }
 
-    return NextResponse.json({ processed: processedCount });
+    return NextResponse.json({ processed: expiredRequests?.length || 0 });
     
   } catch (error) {
     return NextResponse.json(
