@@ -1,3 +1,4 @@
+// app/api/automated-requests/route.ts
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 
@@ -18,15 +19,14 @@ export async function POST(req: Request) {
   try {
     const body: AutomatedRequestParams = await req.json();
     
-    // Get top 3 teachers (reduced from 5)
+    // Get qualified teachers
     const { data: teachers, error } = await supabase
       .from('teacher_profiles')
       .select('id, avg_rating')
       .contains('subjects', [body.subject])
       .gte('teaching_grade', body.grade_level)
       .order('avg_rating', { ascending: false })
-      .limit(3)
-      .throwOnError();
+      .limit(5);
 
     if (!teachers?.length) {
       return NextResponse.json(
@@ -35,8 +35,8 @@ export async function POST(req: Request) {
       );
     }
 
-    // Create initial request with first teacher
-    const { data: request } = await supabase
+    // Create initial request with fallbacks
+    const { data: request, error: insertError } = await supabase
       .from('teaching_requests')
       .insert({
         school_id: user.id,
@@ -45,11 +45,12 @@ export async function POST(req: Request) {
         schedule: body.schedule,
         status: 'pending',
         timeout_at: new Date(Date.now() + 7200 * 1000).toISOString(),
-        fallback_teachers: teachers.slice(1).map(t => t.id) // Store backup teachers
+        fallback_teachers: teachers.slice(1).map(t => t.id)
       })
       .select()
-      .single()
-      .throwOnError();
+      .single();
+
+    if (insertError) throw insertError;
 
     return NextResponse.json(request);
 

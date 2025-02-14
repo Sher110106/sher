@@ -1,3 +1,4 @@
+// app/api/check-timeouts/route.ts
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 
@@ -5,16 +6,18 @@ export async function GET() {
   const supabase = await createClient();
   
   try {
-    // Process expired requests in batches
+    // Process expired requests
     const { data: expiredRequests } = await supabase
       .from('teaching_requests')
       .select('*')
       .lte('timeout_at', new Date().toISOString())
-      .eq('status', 'pending')
-      .limit(10); // Process 10 at a time
+      .eq('status', 'pending');
+
+    let processed = 0;
 
     for (const request of expiredRequests || []) {
-      const fallbackTeachers = request.fallback_teachers || [];
+      // Type guard for fallback_teachers
+      const fallbackTeachers = (request.fallback_teachers || []) as string[];
       
       if (fallbackTeachers.length === 0) {
         await supabase
@@ -24,22 +27,25 @@ export async function GET() {
         continue;
       }
 
-      // Move to next teacher
-      const nextTeacher = fallbackTeachers.shift();
+      // Get next teacher from fallback list
+      const [nextTeacher, ...remaining] = fallbackTeachers;
       
-      await supabase
+      const { error } = await supabase
         .from('teaching_requests')
         .update({
           teacher_id: nextTeacher,
-          fallback_teachers: fallbackTeachers,
+          fallback_teachers: remaining,
           timeout_at: new Date(Date.now() + 7200 * 1000).toISOString()
         })
         .eq('id', request.id);
+
+      if (!error) processed++;
     }
 
-    return NextResponse.json({ processed: expiredRequests?.length || 0 });
+    return NextResponse.json({ processed });
     
   } catch (error) {
+    console.error('Timeout processing error:', error);
     return NextResponse.json(
       { error: "Failed to process timeouts" },
       { status: 500 }
