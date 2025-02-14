@@ -1,6 +1,6 @@
 import { createClient } from "@/utils/supabase/server"
 import { redirect } from "next/navigation";
-import { InfoIcon} from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 export default async function School(){

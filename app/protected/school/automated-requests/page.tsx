@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useToast } from "@/hooks/use-toast"
+
 import { Toaster } from "@/components/ui/toaster"
 import { createClient } from "@/utils/supabase/client"
 
@@ -35,7 +35,7 @@ interface FormData {
 }
 
 export default function AutomatedRequestsPage() {
-  const { toast } = useToast()
+  
   const [requests, setRequests] = useState<AutomatedRequest[]>([])
   const [formData, setFormData] = useState<FormData>({
     subject: '',
@@ -75,15 +75,10 @@ export default function AutomatedRequestsPage() {
       })))
     } catch (error) {
       console.error('Error fetching requests:', error)
-      toast({
-        title: "Error",
-        description: "Failed to fetch requests",
-        variant: "destructive"
-      })
     } finally {
       setIsLoading(false)
     }
-  }, [supabase, toast])
+  }, [supabase])
 
   useEffect(() => {
     fetchRequests()
@@ -125,11 +120,8 @@ export default function AutomatedRequestsPage() {
     
     const validationError = validateForm(formData)
     if (validationError) {
-      toast({
-        title: "Validation Error",
-        description: validationError,
-        variant: "destructive"
-      })
+        console.error('error')
+      
       return
     }
 
@@ -155,11 +147,7 @@ export default function AutomatedRequestsPage() {
         throw new Error(errorText)
       }
 
-      toast({
-        title: "Request submitted",
-        description: "We're finding the best teacher for your needs",
-        variant: "default"
-      })
+      
 
       setFormData({
         subject: '',
@@ -173,7 +161,7 @@ export default function AutomatedRequestsPage() {
       fetchRequests()
 
     } catch (error) {
-      
+      console.error('Error submitting request:', error)
     } finally {
       setIsSubmitting(false)
     }
