@@ -36,6 +36,11 @@ export default async function School(){
               <Button>Past Classes</Button>
             </Link>
             </div>
+            <div>
+            <Link  href="/protected/school/automated-requests" >
+              <Button>Automate Teacher Finding</Button>
+            </Link>
+            </div>
 
           </div>
         </div>
