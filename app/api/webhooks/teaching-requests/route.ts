@@ -39,6 +39,7 @@ export async function POST(req: Request) {
     }
     
     const supabase = await createClient();
+    console.log('record', record);
     const { data: teacherData, error: teacherError } = await supabase
       .from('teacher_profiles')
       .select('full_name, email')
@@ -199,7 +200,7 @@ async function sendPendingEmail(teacherData: any, schoolData: any, record: any) 
   );
 
   await resend.emails.send({
-    from: 'noreply@bugzer.tech',
+    from: 'noreply@bugzer.xyz',
     to: teacherData.email,
     subject: 'New Teaching Request',
     html: emailHTML,
@@ -218,7 +219,7 @@ async function sendRejectionEmail(teacherData: any, schoolData: any, record: any
   );
 
   await resend.emails.send({
-    from: 'noreply@bugzer.tech',
+    from: 'noreply@bugzer.xyz',
     to: schoolData.email,
     subject: 'Teaching Request Declined',
     html: emailHTML,
@@ -238,7 +239,7 @@ async function sendAuthorizationEmail(teacherData: any, schoolData: any, record:
   );
 
   await resend.emails.send({
-    from: 'noreply@bugzer.tech',
+    from: 'noreply@bugzer.xyz',
     to: teacherData.email,
     subject: 'Google Calendar Authorization Required',
     html: emailHTML,
@@ -259,13 +260,13 @@ async function sendAcceptanceEmails(teacherData: any, schoolData: any, record: a
 
   await Promise.all([
     resend.emails.send({
-      from: 'noreply@bugzer.tech',
+      from: 'noreply@bugzer.xyz',
       to: teacherData.email,
       subject: 'Teaching Request Accepted - Meeting Details',
       html: emailHTML,
     }),
     resend.emails.send({
-      from: 'noreply@bugzer.tech',
+      from: 'noreply@bugzer.xyz',
       to: schoolData.email,
       subject: 'Teaching Request Accepted - Meeting Details',
       html: emailHTML,

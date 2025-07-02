@@ -8,7 +8,9 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 import { Toaster } from "@/components/ui/toaster"
+import { useToast } from "@/hooks/use-toast"
 import { createClient } from "@/utils/supabase/client"
+import { RealtimePostgresChangesPayload } from "@supabase/supabase-js"
 
 interface AutomatedRequest {
   id: string
@@ -17,7 +19,7 @@ interface AutomatedRequest {
     date: string
     time: string
   }
-  grade_level: number
+  grade_level?: number
   status: 'pending' | 'accepted' | 'timeout' | 'failed'
   current_teacher?: {
     name: string
@@ -46,10 +48,18 @@ export default function AutomatedRequestsPage() {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const { toast } = useToast()
 
   const supabase = useMemo(() => createClient(), [])
 
   const fetchRequests = useCallback(async () => {
+    if (!supabase) {
+      console.error('Supabase client not initialized')
+      setIsLoading(false)
+      return
+    }
+    
     try {
       const { data, error } = await supabase
         .from('teaching_requests')
@@ -57,7 +67,6 @@ export default function AutomatedRequestsPage() {
           id,
           subject,
           schedule,
-          grade_level,
           status,
           teacher_profiles(full_name, avg_rating),
           created_at
@@ -68,13 +77,15 @@ export default function AutomatedRequestsPage() {
 
       setRequests(data.map(req => ({
         ...req,
+        grade_level: 0, // Set a default value since it's not in the database
         current_teacher: req.teacher_profiles?.[0] ? {
           name: req.teacher_profiles[0].full_name,
           rating: req.teacher_profiles[0].avg_rating
         } : undefined
       })))
     } catch (error) {
-      console.error('Error fetching requests:', error)
+      console.error('Error fetching requests:', error instanceof Error ? error.message : JSON.stringify(error))
+      setRequests([])
     } finally {
       setIsLoading(false)
     }
@@ -83,6 +94,11 @@ export default function AutomatedRequestsPage() {
   useEffect(() => {
     fetchRequests()
     
+    if (!supabase) {
+      console.error('Supabase client not initialized for real-time subscription')
+      return
+    }
+    
     const subscription = supabase
       .channel('auto-requests')
       .on('postgres_changes', {
@@ -90,7 +106,11 @@ export default function AutomatedRequestsPage() {
         schema: 'public',
         table: 'teaching_requests'
       }, () => fetchRequests())
-      .subscribe()
+      .subscribe((status: string) => {
+        if (status !== 'SUBSCRIBED') {
+          console.error('Error with real-time subscription:', status)
+        }
+      })
 
     return () => { subscription.unsubscribe() }
   }, [fetchRequests, supabase])
@@ -118,11 +138,18 @@ export default function AutomatedRequestsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
+    // Clear previous errors
+    setError(null)
+    
     const validationError = validateForm(formData)
     if (validationError) {
-        console.error('error')
-      
-      return
+        setError(validationError)
+        toast({
+          title: "Form Error",
+          description: validationError,
+          variant: "destructive"
+        })
+        return
     }
 
     setIsSubmitting(true)
@@ -143,11 +170,19 @@ export default function AutomatedRequestsPage() {
       })
 
       if (!response.ok) {
-        const errorText = await response.text()
-        throw new Error(errorText)
+        const errorData = await response.json().catch(() => null) || await response.text()
+        const errorMessage = typeof errorData === 'string' ? errorData : 
+                            (errorData && typeof errorData === 'object' && 'message' in errorData) ? 
+                            errorData.message : 'Failed to submit request';
+        throw new Error(errorMessage)
       }
 
-      
+      // Show success toast
+      toast({
+        title: "Success!",
+        description: "Your automated teacher request has been submitted.",
+        variant: "default",
+      })
 
       setFormData({
         subject: '',
@@ -161,7 +196,14 @@ export default function AutomatedRequestsPage() {
       fetchRequests()
 
     } catch (error) {
-      console.error('Error submitting request:', error)
+      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+      console.error('Error submitting request:', errorMessage);
+      setError(errorMessage);
+      toast({
+        title: "Request Failed",
+        description: errorMessage,
+        variant: "destructive",
+      })
     } finally {
       setIsSubmitting(false)
     }
@@ -189,6 +231,12 @@ export default function AutomatedRequestsPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
+            {error && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
+                {error}
+              </div>
+            )}
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label>Subject</Label>
@@ -277,40 +325,43 @@ export default function AutomatedRequestsPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {requests.map(request => (
-              <div key={request.id} className="border rounded-lg p-4">
-                <div className="flex justify-between items-center mb-2">
-                  <div className="space-y-1">
-                    <h3 className="font-semibold">{request.subject}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Grade {request.grade_level} • 
-                      {new Date(request.schedule.date).toLocaleDateString()} • 
-                      {request.schedule.time}
-                    </p>
-                  </div>
-                  {getStatusBadge(request.status)}
-                </div>
-
-                {request.current_teacher && (
-                  <div className="flex items-center space-x-2 text-sm">
-                    <span className="font-medium">Current Teacher:</span>
-                    <span>{request.current_teacher.name}</span>
-                    <span className="text-muted-foreground">
-                      ({request.current_teacher.rating.toFixed(1)}⭐)
-                    </span>
-                  </div>
-                )}
-
-                <div className="mt-2 text-sm text-muted-foreground">
-                  Created {new Date(request.created_at).toLocaleString()}
-                </div>
+            {isLoading ? (
+              <div className="text-center text-muted-foreground py-8">
+                Loading requests...
               </div>
-            ))}
-
-            {requests.length === 0 && (
+            ) : requests.length === 0 ? (
               <div className="text-center text-muted-foreground py-8">
                 No automated requests yet
               </div>
+            ) : (
+              requests.map(request => (
+                <div key={request.id} className="border rounded-lg p-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="space-y-1">
+                      <h3 className="font-semibold">{request.subject}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {new Date(request.schedule.date).toLocaleDateString()} • 
+                        {request.schedule.time}
+                      </p>
+                    </div>
+                    {getStatusBadge(request.status)}
+                  </div>
+
+                  {request.current_teacher && (
+                    <div className="flex items-center space-x-2 text-sm">
+                      <span className="font-medium">Current Teacher:</span>
+                      <span>{request.current_teacher.name}</span>
+                      <span className="text-muted-foreground">
+                        ({request.current_teacher.rating.toFixed(1)}⭐)
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="mt-2 text-sm text-muted-foreground">
+                    Created {new Date(request.created_at).toLocaleString()}
+                  </div>
+                </div>
+              ))
             )}
           </div>
         </CardContent>
