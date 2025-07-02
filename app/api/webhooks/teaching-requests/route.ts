@@ -60,6 +60,7 @@ export async function POST(req: Request) {
     switch (record.status) {
       case 'pending':
         await sendPendingEmail(teacherData, schoolData, record);
+        console.log('Pending email sent');
         break;
       case 'accepted':
         await handleAcceptedRequest(teacherData, schoolData, record, supabase);
@@ -189,22 +190,37 @@ async function handleAcceptedRequest(
 
 
 async function sendPendingEmail(teacherData: any, schoolData: any, record: any) {
-  const emailHTML = await render(
-    EmailTemplate({
-      teacherName: teacherData.full_name,
-      schoolName: schoolData.school_name,
-      subject: record.subject,
-      schedule: record.schedule,
-      status: 'pending'
-    })
-  );
+  try {
+    const emailHTML = await render(
+      EmailTemplate({
+        teacherName: teacherData.full_name,
+        schoolName: schoolData.school_name,
+        subject: record.subject,
+        schedule: record.schedule,
+        status: 'pending'
+      })
+    );
 
-  await resend.emails.send({
-    from: 'noreply@bugzer.xyz',
-    to: teacherData.email,
-    subject: 'New Teaching Request',
-    html: emailHTML,
-  });
+    await resend.emails.send({
+      from: 'noreply@bugzer.xyz',
+      to: teacherData.email,
+      subject: 'New Teaching Request',
+      html: emailHTML,
+    });
+  } catch (error) {
+    console.error('Error sending pending email:', {
+      errorMessage: error instanceof Error ? error.message : 'Unknown error',
+      teacherData,
+      schoolData,
+      record
+    });
+    throw error;
+  }
+  console.log('Pending email sent');
+  console.log('teacherData', teacherData);
+  console.log('schoolData', schoolData);
+  console.log('record', record);
+
 }
 
 async function sendRejectionEmail(teacherData: any, schoolData: any, record: any) {
