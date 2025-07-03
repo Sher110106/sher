@@ -5,8 +5,12 @@ import { FormMessage, Message } from "@/components/form-message";
 import { SubmitButton } from "@/components/submit-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import Link from "next/link";
+import Image from "next/image";
 import { SmtpMessage } from "../smtp-message";
+import { Users, GraduationCap } from "lucide-react";
 
 export default function Signup(props: { searchParams: Promise<Message>; }) {
   const [searchParams, setSearchParams] = useState<Message | null>(null);
@@ -24,9 +28,13 @@ export default function Signup(props: { searchParams: Promise<Message>; }) {
 
   if (searchParams && "message" in searchParams) {
     return (
-      <div className="w-full flex-1 flex items-center h-screen sm:max-w-md justify-center gap-2 p-4">
-        <FormMessage message={searchParams} />
-      </div>
+      <>
+        <Card className="w-full max-w-md">
+          <CardContent className="p-8">
+            <FormMessage message={searchParams} />
+          </CardContent>
+        </Card>
+      </>
     );
   }
 
@@ -66,147 +74,260 @@ export default function Signup(props: { searchParams: Promise<Message>; }) {
 
   return (
     <>
-      <form
-        onSubmit={handleSubmit}
-        className="flex flex-col min-w-64 max-w-64 mx-auto"
-      >
-        <h1 className="text-2xl font-medium">Sign up</h1>
-        <p className="text-sm text text-foreground">
-          Already have an account?{" "}
-          <Link className="text-primary font-medium underline" href="/sign-in">
-            Sign in
-          </Link>
-        </p>
-        <div className="flex flex-col gap-2 [&>input]:mb-3 mt-8">
-          <Label htmlFor="email">Email</Label>
-          <Input name="email" placeholder="you@example.com" required />
-          <Label htmlFor="password">Password</Label>
-          <Input
-            type="password"
-            name="password"
-            placeholder="Your password"
-            minLength={6}
-            required
-          />
-          <Label htmlFor="role">Role</Label>
-          <div className="flex gap-2">
-            <Label htmlFor="schoolCheckbox" className="flex items-center gap-2">
-              <Input
-                type="checkbox"
-                id="schoolCheckbox"
-                name="role"
-                value="school"
-                checked={selectedRole === 'school'}
-                onChange={() => handleRoleChange('school')}
-                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+      {/* Background decoration */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/10 -z-10" />
+      
+      <div className="w-full max-w-lg space-y-6">
+        <Card className="animate-fade-in">
+          <CardHeader className="text-center space-y-6">
+            <div className="flex justify-center">
+              <Image
+                src="/quad_logo.png"
+                alt="Quad"
+                width={60}
+                height={60}
+                className="rounded-2xl"
               />
-              School
-            </Label>
-            <Label htmlFor="teacherCheckbox" className="flex items-center gap-2">
-              <Input
-                type="checkbox"
-                id="teacherCheckbox"
-                name="role"
-                value="teacher"
-                checked={selectedRole === 'teacher'}
-                onChange={() => handleRoleChange('teacher')}
-                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-              />
-              Teacher
-            </Label>
-          </div>
-
-          {selectedRole === 'school' && (
-            <>
-              <Label htmlFor="schoolName">School Name</Label>
-              <Input name="schoolName" placeholder="Your School Name" required />
-              
-              <Label htmlFor="state">State</Label>
-              <Input name="state" placeholder="State" required />
-              
-              <Label htmlFor="district">District</Label>
-              <Input name="district" placeholder="District" required />
-              
-              <Label htmlFor="cluster">Cluster</Label>
-              <Input name="cluster" placeholder="Cluster" required />
-              
-              <Label htmlFor="block">Block</Label>
-              <Input name="block" placeholder="Block" required />
-
-
-              
-            </>
-          )}
-
-          {selectedRole === 'teacher' && (
-            <>
-              <Label htmlFor="fullName">Full Name</Label>
-              <Input name="fullName" placeholder="Your Full Name" required />
-
-              <Label htmlFor="teachingGrade">Grade</Label>
-              <Input
-                type="number"
-                name="teachingGrade"
-                placeholder="Teaching Grade"
-                min="1"
-                max="12"
-                required
-              />
-
-              <Label htmlFor="subjects">Subjects (Max 3)</Label>
-              <div className="flex flex-col gap-2">
-                {['Math', 'Science', 'English', 'History'].map((subject) => (
-                  <Label key={subject} htmlFor={subject.toLowerCase()} className="flex items-center gap-2">
-                    <Input
-                      type="checkbox"
-                      id={subject.toLowerCase()}
-                      name="subjects"
-                      value={subject.toLowerCase()}
-                      checked={selectedSubjects.includes(subject.toLowerCase())}
-                      onChange={() => handleSubjectChange(subject.toLowerCase())}
-                      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                    />
-                    {subject}
+            </div>
+            <div className="space-y-2">
+              <CardTitle className="text-2xl font-bold tracking-tight">Create your account</CardTitle>
+              <p className="text-muted-foreground">
+                Join the Quad community today
+              </p>
+            </div>
+          </CardHeader>
+          
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Basic Information */}
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-sm font-medium">
+                    Email address
                   </Label>
-                ))}
+                  <Input 
+                    name="email" 
+                    type="email"
+                    placeholder="you@example.com" 
+                    required 
+                    className="field-focus focus-ring"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-sm font-medium">
+                    Password
+                  </Label>
+                  <Input
+                    type="password"
+                    name="password"
+                    placeholder="Create a secure password"
+                    minLength={6}
+                    required
+                    className="field-focus focus-ring"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Must be at least 6 characters long
+                  </p>
+                </div>
               </div>
 
-              <Label htmlFor="qualifications">Qualifications</Label>
-              <div className="flex flex-col gap-2">
-                {['PhD', 'Masters', 'Bachelors', 'Diploma', 'Other'].map((qual) => (
-                  <Label key={qual} htmlFor={qual.toLowerCase()} className="flex items-center gap-2">
-                    <Input
-                      type="checkbox"
-                      id={qual.toLowerCase()}
-                      name="qualifications"
-                      value={qual.toLowerCase()}
-                      checked={selectedQualifications.includes(qual.toLowerCase())}
-                      onChange={() => handleQualificationChange(qual.toLowerCase())}
-                      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                    />
-                    {qual}
-                  </Label>
-                ))}
+              {/* Role Selection */}
+              <div className="space-y-4">
+                <Label className="text-sm font-medium">I am a...</Label>
+                <div className="grid grid-cols-2 gap-4">
+                  <Card 
+                    className={`cursor-pointer transition-all duration-200 ${
+                      selectedRole === 'school' 
+                        ? 'border-primary bg-primary/5' 
+                        : 'hover:border-primary/50'
+                    }`}
+                    onClick={() => handleRoleChange('school')}
+                  >
+                    <CardContent className="p-4 text-center space-y-3">
+                      <Users className="h-8 w-8 mx-auto text-primary" />
+                      <div>
+                        <p className="font-medium">School</p>
+                        <p className="text-xs text-muted-foreground">Find qualified teachers</p>
+                      </div>
+                      <input
+                        type="radio"
+                        name="role"
+                        value="school"
+                        checked={selectedRole === 'school'}
+                        onChange={() => handleRoleChange('school')}
+                        className="sr-only"
+                      />
+                    </CardContent>
+                  </Card>
+
+                  <Card 
+                    className={`cursor-pointer transition-all duration-200 ${
+                      selectedRole === 'teacher' 
+                        ? 'border-primary bg-primary/5' 
+                        : 'hover:border-primary/50'
+                    }`}
+                    onClick={() => handleRoleChange('teacher')}
+                  >
+                    <CardContent className="p-4 text-center space-y-3">
+                      <GraduationCap className="h-8 w-8 mx-auto text-primary" />
+                      <div>
+                        <p className="font-medium">Teacher</p>
+                        <p className="text-xs text-muted-foreground">Offer your expertise</p>
+                      </div>
+                      <input
+                        type="radio"
+                        name="role"
+                        value="teacher"
+                        checked={selectedRole === 'teacher'}
+                        onChange={() => handleRoleChange('teacher')}
+                        className="sr-only"
+                      />
+                    </CardContent>
+                  </Card>
+                </div>
               </div>
 
-              <Label htmlFor="experienceYears">Experience Years</Label>
-              <Input 
-                name="experienceYears" 
-                placeholder="Experience Years" 
-                type="number"
-                min="0"
-                required 
-              />
-            </>
-          )}
+              {/* School-specific fields */}
+              {selectedRole === 'school' && (
+                <div className="space-y-4 animate-fade-in">
+                  <h3 className="text-lg font-semibold text-foreground">School Information</h3>
+                  
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="schoolName" className="text-sm font-medium">School Name</Label>
+                      <Input name="schoolName" placeholder="Your School Name" required className="field-focus focus-ring" />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="state" className="text-sm font-medium">State</Label>
+                        <Input name="state" placeholder="State" required className="field-focus focus-ring" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="district" className="text-sm font-medium">District</Label>
+                        <Input name="district" placeholder="District" required className="field-focus focus-ring" />
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="cluster" className="text-sm font-medium">Cluster</Label>
+                        <Input name="cluster" placeholder="Cluster" required className="field-focus focus-ring" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="block" className="text-sm font-medium">Block</Label>
+                        <Input name="block" placeholder="Block" required className="field-focus focus-ring" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
-          <SubmitButton pendingText="Signing up...">
-            Sign up
-          </SubmitButton>
-          {searchParams && <FormMessage message={searchParams} />}
+              {/* Teacher-specific fields */}
+              {selectedRole === 'teacher' && (
+                <div className="space-y-6 animate-fade-in">
+                  <h3 className="text-lg font-semibold text-foreground">Teacher Information</h3>
+                  
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="fullName" className="text-sm font-medium">Full Name</Label>
+                      <Input name="fullName" placeholder="Your Full Name" required className="field-focus focus-ring" />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="teachingGrade" className="text-sm font-medium">Teaching Grade</Label>
+                        <Input
+                          type="number"
+                          name="teachingGrade"
+                          placeholder="Grade"
+                          min="1"
+                          max="12"
+                          required
+                          className="field-focus focus-ring"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="experienceYears" className="text-sm font-medium">Experience (Years)</Label>
+                        <Input 
+                          name="experienceYears" 
+                          placeholder="Years" 
+                          type="number"
+                          min="0"
+                          required 
+                          className="field-focus focus-ring"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium">Subjects (Max 3)</Label>
+                      <div className="grid grid-cols-2 gap-3">
+                        {['Math', 'Science', 'English', 'History'].map((subject) => (
+                          <Label key={subject} className="flex items-center space-x-2 cursor-pointer">
+                            <Checkbox
+                              name="subjects"
+                              value={subject.toLowerCase()}
+                              checked={selectedSubjects.includes(subject.toLowerCase())}
+                              onCheckedChange={() => handleSubjectChange(subject.toLowerCase())}
+                            />
+                            <span className="text-sm">{subject}</span>
+                          </Label>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium">Qualifications</Label>
+                      <div className="grid grid-cols-2 gap-3">
+                        {['PhD', 'Masters', 'Bachelors', 'Diploma', 'Other'].map((qual) => (
+                          <Label key={qual} className="flex items-center space-x-2 cursor-pointer">
+                            <Checkbox
+                              name="qualifications"
+                              value={qual.toLowerCase()}
+                              checked={selectedQualifications.includes(qual.toLowerCase())}
+                              onCheckedChange={() => handleQualificationChange(qual.toLowerCase())}
+                            />
+                            <span className="text-sm">{qual}</span>
+                          </Label>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-4">
+                <SubmitButton 
+                  pendingText="Creating account..." 
+                  className="w-full rounded-xl py-6 text-base font-medium shadow-lg hover:shadow-xl transition-all duration-300"
+                >
+                  Create account
+                </SubmitButton>
+                
+                {searchParams && <FormMessage message={searchParams} />}
+              </div>
+            </form>
+
+            <div className="mt-8 text-center">
+              <p className="text-sm text-muted-foreground">
+                Already have an account?{" "}
+                <Link 
+                  className="text-primary font-medium hover:text-primary/80 transition-colors duration-200" 
+                  href="/sign-in"
+                >
+                  Sign in
+                </Link>
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <div className="animate-slide-up" style={{ animationDelay: '0.3s' }}>
+          <SmtpMessage />
         </div>
-      </form>
-      <SmtpMessage />
+      </div>
     </>
   );
 }

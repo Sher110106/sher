@@ -6,6 +6,7 @@ import { hasEnvVars } from "@/utils/supabase/check-env-vars";
 import { Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import Link from "next/link";
+import Image from "next/image";
 import "./globals.css";
 
 const defaultUrl = 'https://sher-sable.vercel.app'
@@ -35,33 +36,69 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <main className="min-h-screen flex flex-col items-center">
-            <div className="flex-1 w-full flex flex-col gap-20 items-center">
-              <nav className="w-full flex justify-center border-b border-b-foreground/10 h-16">
-                <div className="w-full max-w-5xl flex justify-between items-center p-3 px-5 text-sm">
-                  <div className="flex gap-5 items-center text-2xl font-bold">
-                    <Link href={"/"}>Quad</Link>
-                  </div>
+          <main className="min-h-screen flex flex-col">
+            {/* Navigation */}
+            <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-md">
+              <div className="max-w-7xl mx-auto flex justify-between items-center px-6 py-4">
+                <Link 
+                  href="/" 
+                  className="flex items-center gap-3 hover:opacity-80 transition-opacity duration-200"
+                >
+                  <Image
+                    src="/quad_logo.png"
+                    alt="Quad"
+                    width={40}
+                    height={40}
+                    className="rounded-xl"
+                  />
+                  <span className="text-2xl font-bold tracking-tight text-foreground">
+                    Quad
+                  </span>
+                </Link>
+                
+                <div className="flex items-center gap-4">
                   {!hasEnvVars ? <EnvVarWarning /> : <HeaderAuth />}
+                  <ThemeSwitcher />
                 </div>
-              </nav>
-              <div className="flex flex-col gap-20 max-w-5xl p-5">
+              </div>
+            </nav>
+
+            {/* Main Content */}
+            <div className="flex-1 flex flex-col">
+              <div className="flex-1 w-full max-w-7xl mx-auto px-6 py-8">
                 {children}
               </div>
 
-              <footer className="w-full flex items-center justify-center border-t mx-auto text-center text-xs gap-8 py-16">
-                <p>
-                  Powered by{" "}
-                  <a
-                    href="/"
-                    target="_blank"
-                    className="font-bold hover:underline"
-                    rel="noreferrer"
-                  >
-                    Bharti Airtel Foundation
-                  </a>
-                </p>
-                <ThemeSwitcher />
+              {/* Footer */}
+              <footer className="w-full border-t border-border/40 bg-card/50 backdrop-blur-sm">
+                <div className="max-w-7xl mx-auto px-6 py-8">
+                  <div className="flex flex-col items-center gap-6 text-center">
+                    <div className="flex items-center gap-3">
+                      <Image
+                        src="/quad_logo.png"
+                        alt="Quad"
+                        width={24}
+                        height={24}
+                        className="rounded-lg opacity-80"
+                      />
+                      <span className="text-sm font-medium text-muted-foreground">
+                        Powered by Bharti Airtel Foundation
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center gap-6 text-xs text-muted-foreground">
+                      <Link href="/privacy" className="hover:text-foreground transition-colors">
+                        Privacy
+                      </Link>
+                      <span className="w-1 h-1 bg-muted-foreground rounded-full"></span>
+                      <Link href="#" className="hover:text-foreground transition-colors">
+                        Terms
+                      </Link>
+                      <span className="w-1 h-1 bg-muted-foreground rounded-full"></span>
+                      <span>© 2024 Quad Team</span>
+                    </div>
+                  </div>
+                </div>
               </footer>
             </div>
           </main>
