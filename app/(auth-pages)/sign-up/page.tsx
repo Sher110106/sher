@@ -29,8 +29,8 @@ export default function Signup(props: { searchParams: Promise<Message>; }) {
   if (searchParams && "message" in searchParams) {
     return (
       <>
-        <Card className="w-full max-w-md">
-          <CardContent className="p-8">
+        <Card className="w-full max-w-sm sm:max-w-md">
+          <CardContent className="p-4 sm:p-8">
             <FormMessage message={searchParams} />
           </CardContent>
         </Card>
@@ -77,30 +77,30 @@ export default function Signup(props: { searchParams: Promise<Message>; }) {
       {/* Background decoration */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/10 -z-10" />
       
-      <div className="w-full max-w-lg space-y-6">
+      <div className="w-full max-w-sm sm:max-w-lg space-y-4 sm:space-y-6">
         <Card className="animate-fade-in">
-          <CardHeader className="text-center space-y-6">
+          <CardHeader className="text-center space-y-4 sm:space-y-6 px-4 sm:px-6 pt-6 sm:pt-8">
             <div className="flex justify-center">
               <Image
                 src="/quad_logo.png"
                 alt="Quad"
-                width={60}
-                height={60}
-                className="rounded-2xl"
+                width={48}
+                height={48}
+                className="sm:w-[60px] sm:h-[60px] rounded-2xl"
               />
             </div>
             <div className="space-y-2">
-              <CardTitle className="text-2xl font-bold tracking-tight">Create your account</CardTitle>
-              <p className="text-muted-foreground">
+              <CardTitle className="text-xl sm:text-2xl font-bold tracking-tight">Create your account</CardTitle>
+              <p className="text-sm sm:text-base text-muted-foreground">
                 Join the Quad community today
               </p>
             </div>
           </CardHeader>
           
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
+          <CardContent className="px-4 sm:px-6 pb-6 sm:pb-8">
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
               {/* Basic Information */}
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email" className="text-sm font-medium">
                     Email address
@@ -110,7 +110,7 @@ export default function Signup(props: { searchParams: Promise<Message>; }) {
                     type="email"
                     placeholder="you@example.com" 
                     required 
-                    className="field-focus focus-ring"
+                    className="field-focus focus-ring h-10 sm:h-11"
                   />
                 </div>
 
@@ -124,7 +124,7 @@ export default function Signup(props: { searchParams: Promise<Message>; }) {
                     placeholder="Create a secure password"
                     minLength={6}
                     required
-                    className="field-focus focus-ring"
+                    className="field-focus focus-ring h-10 sm:h-11"
                   />
                   <p className="text-xs text-muted-foreground">
                     Must be at least 6 characters long
@@ -133,9 +133,9 @@ export default function Signup(props: { searchParams: Promise<Message>; }) {
               </div>
 
               {/* Role Selection */}
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 <Label className="text-sm font-medium">I am a...</Label>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <Card 
                     className={`cursor-pointer transition-all duration-200 ${
                       selectedRole === 'school' 
@@ -144,10 +144,10 @@ export default function Signup(props: { searchParams: Promise<Message>; }) {
                     }`}
                     onClick={() => handleRoleChange('school')}
                   >
-                    <CardContent className="p-4 text-center space-y-3">
-                      <Users className="h-8 w-8 mx-auto text-primary" />
+                    <CardContent className="p-3 sm:p-4 text-center space-y-2 sm:space-y-3">
+                      <Users className="h-6 w-6 sm:h-8 sm:w-8 mx-auto text-primary" />
                       <div>
-                        <p className="font-medium">School</p>
+                        <p className="font-medium text-sm sm:text-base">School</p>
                         <p className="text-xs text-muted-foreground">Find qualified teachers</p>
                       </div>
                       <input
@@ -169,10 +169,10 @@ export default function Signup(props: { searchParams: Promise<Message>; }) {
                     }`}
                     onClick={() => handleRoleChange('teacher')}
                   >
-                    <CardContent className="p-4 text-center space-y-3">
-                      <GraduationCap className="h-8 w-8 mx-auto text-primary" />
+                    <CardContent className="p-3 sm:p-4 text-center space-y-2 sm:space-y-3">
+                      <GraduationCap className="h-6 w-6 sm:h-8 sm:w-8 mx-auto text-primary" />
                       <div>
-                        <p className="font-medium">Teacher</p>
+                        <p className="font-medium text-sm sm:text-base">Teacher</p>
                         <p className="text-xs text-muted-foreground">Offer your expertise</p>
                       </div>
                       <input
@@ -190,34 +190,34 @@ export default function Signup(props: { searchParams: Promise<Message>; }) {
 
               {/* School-specific fields */}
               {selectedRole === 'school' && (
-                <div className="space-y-4 animate-fade-in">
-                  <h3 className="text-lg font-semibold text-foreground">School Information</h3>
+                <div className="space-y-3 sm:space-y-4 animate-fade-in">
+                  <h3 className="text-base sm:text-lg font-semibold text-foreground">School Information</h3>
                   
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="schoolName" className="text-sm font-medium">School Name</Label>
-                      <Input name="schoolName" placeholder="Your School Name" required className="field-focus focus-ring" />
+                      <Input name="schoolName" placeholder="Your School Name" required className="field-focus focus-ring h-10 sm:h-11" />
                     </div>
                     
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="state" className="text-sm font-medium">State</Label>
-                        <Input name="state" placeholder="State" required className="field-focus focus-ring" />
+                        <Input name="state" placeholder="State" required className="field-focus focus-ring h-10 sm:h-11" />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="district" className="text-sm font-medium">District</Label>
-                        <Input name="district" placeholder="District" required className="field-focus focus-ring" />
+                        <Input name="district" placeholder="District" required className="field-focus focus-ring h-10 sm:h-11" />
                       </div>
                     </div>
                     
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="cluster" className="text-sm font-medium">Cluster</Label>
-                        <Input name="cluster" placeholder="Cluster" required className="field-focus focus-ring" />
+                        <Input name="cluster" placeholder="Cluster" required className="field-focus focus-ring h-10 sm:h-11" />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="block" className="text-sm font-medium">Block</Label>
-                        <Input name="block" placeholder="Block" required className="field-focus focus-ring" />
+                        <Input name="block" placeholder="Block" required className="field-focus focus-ring h-10 sm:h-11" />
                       </div>
                     </div>
                   </div>
@@ -226,16 +226,16 @@ export default function Signup(props: { searchParams: Promise<Message>; }) {
 
               {/* Teacher-specific fields */}
               {selectedRole === 'teacher' && (
-                <div className="space-y-6 animate-fade-in">
-                  <h3 className="text-lg font-semibold text-foreground">Teacher Information</h3>
+                <div className="space-y-4 sm:space-y-6 animate-fade-in">
+                  <h3 className="text-base sm:text-lg font-semibold text-foreground">Teacher Information</h3>
                   
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="fullName" className="text-sm font-medium">Full Name</Label>
-                      <Input name="fullName" placeholder="Your Full Name" required className="field-focus focus-ring" />
+                      <Input name="fullName" placeholder="Your Full Name" required className="field-focus focus-ring h-10 sm:h-11" />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="teachingGrade" className="text-sm font-medium">Teaching Grade</Label>
                         <Input
@@ -245,7 +245,7 @@ export default function Signup(props: { searchParams: Promise<Message>; }) {
                           min="1"
                           max="12"
                           required
-                          className="field-focus focus-ring"
+                          className="field-focus focus-ring h-10 sm:h-11"
                         />
                       </div>
                       <div className="space-y-2">
@@ -256,23 +256,23 @@ export default function Signup(props: { searchParams: Promise<Message>; }) {
                           type="number"
                           min="0"
                           required 
-                          className="field-focus focus-ring"
+                          className="field-focus focus-ring h-10 sm:h-11"
                         />
                       </div>
                     </div>
 
                     <div className="space-y-3">
                       <Label className="text-sm font-medium">Subjects (Max 3)</Label>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                         {['Math', 'Science', 'English', 'History'].map((subject) => (
-                          <Label key={subject} className="flex items-center space-x-2 cursor-pointer">
+                          <Label key={subject} className="flex items-center space-x-2 cursor-pointer text-sm">
                             <Checkbox
                               name="subjects"
                               value={subject.toLowerCase()}
                               checked={selectedSubjects.includes(subject.toLowerCase())}
                               onCheckedChange={() => handleSubjectChange(subject.toLowerCase())}
                             />
-                            <span className="text-sm">{subject}</span>
+                            <span>{subject}</span>
                           </Label>
                         ))}
                       </div>
@@ -280,16 +280,16 @@ export default function Signup(props: { searchParams: Promise<Message>; }) {
 
                     <div className="space-y-3">
                       <Label className="text-sm font-medium">Qualifications</Label>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                         {['PhD', 'Masters', 'Bachelors', 'Diploma', 'Other'].map((qual) => (
-                          <Label key={qual} className="flex items-center space-x-2 cursor-pointer">
+                          <Label key={qual} className="flex items-center space-x-2 cursor-pointer text-sm">
                             <Checkbox
                               name="qualifications"
                               value={qual.toLowerCase()}
                               checked={selectedQualifications.includes(qual.toLowerCase())}
                               onCheckedChange={() => handleQualificationChange(qual.toLowerCase())}
                             />
-                            <span className="text-sm">{qual}</span>
+                            <span>{qual}</span>
                           </Label>
                         ))}
                       </div>
@@ -298,10 +298,10 @@ export default function Signup(props: { searchParams: Promise<Message>; }) {
                 </div>
               )}
 
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 <SubmitButton 
                   pendingText="Creating account..." 
-                  className="w-full rounded-xl py-6 text-base font-medium shadow-lg hover:shadow-xl transition-all duration-300"
+                  className="w-full rounded-xl py-3 sm:py-6 text-sm sm:text-base font-medium shadow-lg hover:shadow-xl transition-all duration-300"
                 >
                   Create account
                 </SubmitButton>
@@ -310,8 +310,8 @@ export default function Signup(props: { searchParams: Promise<Message>; }) {
               </div>
             </form>
 
-            <div className="mt-8 text-center">
-              <p className="text-sm text-muted-foreground">
+            <div className="mt-6 sm:mt-8 text-center">
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 Already have an account?{" "}
                 <Link 
                   className="text-primary font-medium hover:text-primary/80 transition-colors duration-200" 

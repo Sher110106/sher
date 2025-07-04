@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Toaster } from "@/components/ui/toaster";
+import { ArrowLeft, User, Calendar, Clock, Award, BookOpen } from "lucide-react";
+import Link from "next/link";
 
 interface Teacher {
   id: string;
@@ -136,34 +138,79 @@ export default function TeacherDetail() {
       setIsSubmitting(false);
     }
   };
-  
 
-  if (loading) return <p>Loading...</p>;
-  if (!teacher) return <p>Teacher not found</p>;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <p className="text-muted-foreground text-sm sm:text-base">Loading teacher details...</p>
+      </div>
+    );
+  }
+
+  if (!teacher) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4 px-4">
+        <p className="text-muted-foreground text-sm sm:text-base">Teacher not found</p>
+        <Link href="/protected/school/teachers">
+          <Button variant="outline" className="flex items-center gap-2">
+            <ArrowLeft className="h-4 w-4" />
+            Back to Teachers
+          </Button>
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <>
-      <div className="max-w-4xl mx-auto p-4 space-y-8">
+      <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6 lg:space-y-8 px-4">
+        {/* Back Navigation */}
+        <div className="flex items-center gap-4">
+          <Link href="/protected/school/teachers">
+            <Button variant="outline" size="sm" className="flex items-center gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              <span className="hidden sm:inline">Back to Teachers</span>
+              <span className="sm:hidden">Back</span>
+            </Button>
+          </Link>
+        </div>
+
+        {/* Teacher Profile Card */}
         <Card>
-          <CardContent className="p-6">
-            <div className="flex justify-between items-start mb-6">
-              <h1 className="text-3xl font-bold">{teacher.full_name}</h1>
+          <CardContent className="p-3 sm:p-4 lg:p-6 xl:p-8">
+            {/* Header with Name and Request Button */}
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 sm:gap-6 mb-4 sm:mb-6">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto sm:mx-0">
+                  <User className="h-7 w-7 sm:h-8 sm:w-8 lg:h-10 lg:w-10 text-primary" />
+                </div>
+                <div className="text-center sm:text-left">
+                  <h1 className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold">{teacher.full_name}</h1>
+                  <p className="text-sm sm:text-base text-muted-foreground">
+                    {teacher.experience_years} years of experience
+                  </p>
+                </div>
+              </div>
+              
               <Dialog open={showDialog} onOpenChange={setShowDialog}>
                 <DialogTrigger asChild>
-                  <Button>Send Request</Button>
+                  <Button className="w-full sm:w-auto text-sm sm:text-base">
+                    <span className="sm:hidden">Send Request</span>
+                    <span className="hidden sm:inline">Send Teaching Request</span>
+                  </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="w-[95vw] max-w-md mx-auto p-4 sm:p-6">
                   <DialogHeader>
-                    <DialogTitle>Send Teaching Request</DialogTitle>
+                    <DialogTitle className="text-base sm:text-lg lg:text-xl">Send Teaching Request</DialogTitle>
                   </DialogHeader>
-                  <div className="space-y-4 mt-4">
+                  <div className="space-y-3 sm:space-y-4 mt-3 sm:mt-4">
                     <div>
-                      <label className="text-sm font-medium">Subject</label>
+                      <label className="text-sm font-medium mb-2 block">Subject</label>
                       <Select
                         value={formData.subject}
                         onValueChange={(value) => setFormData(prev => ({ ...prev, subject: value }))}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="h-9 sm:h-10">
                           <SelectValue placeholder="Select subject" />
                         </SelectTrigger>
                         <SelectContent>
@@ -177,28 +224,30 @@ export default function TeacherDetail() {
                     </div>
                     
                     <div>
-                      <label className="text-sm font-medium">Date</label>
+                      <label className="text-sm font-medium mb-2 block">Date</label>
                       <Input
                         type="date"
                         value={formData.date}
                         onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
                         min={new Date().toISOString().split('T')[0]}
+                        className="h-9 sm:h-10"
                       />
                     </div>
                     
                     <div>
-                      <label className="text-sm font-medium">Time</label>
+                      <label className="text-sm font-medium mb-2 block">Time</label>
                       <Input
                         type="time"
                         value={formData.time}
                         onChange={(e) => setFormData(prev => ({ ...prev, time: e.target.value }))}
+                        className="h-9 sm:h-10"
                       />
                     </div>
                     
                     <Button 
                       onClick={handleSubmit} 
                       disabled={isSubmitting}
-                      className="w-full"
+                      className="w-full h-9 sm:h-10 text-sm sm:text-base"
                     >
                       {isSubmitting ? "Submitting..." : "Submit Request"}
                     </Button>
@@ -206,22 +255,90 @@ export default function TeacherDetail() {
                 </DialogContent>
               </Dialog>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <p><strong>Subjects:</strong> {teacher.subjects?.join(", ") || "No subjects listed"}</p>
-              <p><strong>Experience:</strong> {teacher.experience_years} years</p>
-              <p><strong>Grade Level:</strong> {
-                teacher.teaching_grade ? `Grade ${teacher.teaching_grade}` : "Not specified"
-              }</p>
-              <p><strong>Qualifications:</strong> {teacher.qualifications?.join(", ") || "No qualifications listed"}</p>
-              <p>
-                      <span className="font-medium"><strong>Availability:</strong></span>{" "}
-                      {teacher.availability?.schedule.map((slot, index) => (
-                        <span key={index}>
-                          {slot.day} ({slot.time_range.start} - {slot.time_range.end})
-                          {index < teacher.availability.schedule.length - 1 ? ', ' : ''}
+
+            {/* Teacher Details Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
+              {/* Basic Information */}
+              <div className="space-y-3 sm:space-y-4">
+                <h2 className="text-base sm:text-lg font-semibold flex items-center gap-2">
+                  <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                  Teaching Information
+                </h2>
+                
+                <div className="space-y-3 sm:space-y-4">
+                  <div>
+                    <label className="text-xs sm:text-sm font-medium text-muted-foreground">Subjects</label>
+                    <div className="flex flex-wrap gap-1 sm:gap-2 mt-1">
+                      {teacher.subjects?.map((subject, index) => (
+                        <span 
+                          key={index}
+                          className="bg-primary/10 text-primary px-2 py-1 rounded-md text-xs sm:text-sm font-medium"
+                        >
+                          {subject}
                         </span>
-                      ))}
-                    </p>
+                      )) || <span className="text-muted-foreground text-xs sm:text-sm">No subjects listed</span>}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div>
+                      <label className="text-xs sm:text-sm font-medium text-muted-foreground">Experience</label>
+                      <p className="text-sm sm:text-base font-medium">{teacher.experience_years} years</p>
+                    </div>
+                    
+                    <div>
+                      <label className="text-xs sm:text-sm font-medium text-muted-foreground">Grade Level</label>
+                      <p className="text-sm sm:text-base font-medium">
+                        {teacher.teaching_grade ? `Grade ${teacher.teaching_grade}` : "Not specified"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-xs sm:text-sm font-medium text-muted-foreground">Qualifications</label>
+                    <div className="flex flex-wrap gap-1 sm:gap-2 mt-1">
+                      {teacher.qualifications?.map((qual, index) => (
+                        <span 
+                          key={index}
+                          className="bg-secondary px-2 py-1 rounded-md text-xs sm:text-sm"
+                        >
+                          {qual}
+                        </span>
+                      )) || <span className="text-muted-foreground text-xs sm:text-sm">No qualifications listed</span>}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Availability */}
+              <div className="space-y-3 sm:space-y-4">
+                <h2 className="text-base sm:text-lg font-semibold flex items-center gap-2">
+                  <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                  Availability
+                </h2>
+                
+                <div className="space-y-2">
+                  {teacher.availability?.schedule?.length > 0 ? (
+                    teacher.availability.schedule.map((slot, index) => (
+                      <div 
+                        key={index}
+                        className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-2 sm:p-3 bg-secondary/50 rounded-lg gap-1 sm:gap-2"
+                      >
+                        <span className="font-medium text-sm sm:text-base">{slot.day}</span>
+                        <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-muted-foreground">
+                          <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
+                          <span>{slot.time_range.start} - {slot.time_range.end}</span>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-4 sm:py-6 text-muted-foreground">
+                      <Calendar className="h-6 w-6 sm:h-8 sm:w-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-xs sm:text-sm">No availability schedule provided</p>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>

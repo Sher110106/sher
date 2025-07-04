@@ -2,6 +2,10 @@
 https://sher-sable.vercel.app
 Quad is a modern web platform that connects teachers with schools, facilitating online teaching and class management. Built with Next.js 14, Supabase, and TypeScript.
 
+## Documentation
+
+For a step-by-step walkthrough aimed at end-users, please read the dedicated [User Manual](./User_Manual.md).
+
 # User Flow Guide
 
 ## Deployment Note
@@ -216,9 +220,11 @@ These features may be implemented in future versions when enterprise accounts ar
    NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
    RESEND_API_KEY=your_resend_api_key
-   GOOGLE_CLIENT_ID=your_google_cliend_id
+   GOOGLE_CLIENT_ID=your_google_client_id
    GOOGLE_CLIENT_SECRET=your_client_secret
    NEXT_PUBLIC_BASE_URL=your_public_url
+   SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+   RESEND_FROM_EMAIL=your_verified_sender_email
    ```
 
 4. **Development**
@@ -272,9 +278,7 @@ app/
     ├── google-auth.ts  # Google OAuth configuration
     ├── google-meet.ts  # Google Meet integration
     └── types/         # TypeScript type definitions
-
-
-
+```
 
 ### Key Directories and Files
 
@@ -314,20 +318,6 @@ tables/
 ├── user_google_tokens # OAuth tokens
 └── availability      # Teacher availability slots
 ```
-
-### Key Features by Directory
-
-#### School Features (`app/protected/school/`)
-- Teacher search and filtering
-- Class scheduling
-- Past class management
-- Recording management
-
-#### Teacher Features (`app/protected/teacher/`)
-- Availability management
-- Class schedule viewing
-- Profile management
-- Past class access
 
 ## Contributing
 

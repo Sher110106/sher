@@ -14,28 +14,28 @@ export default async function Login(props: { searchParams: Promise<Message> }) {
       {/* Background decoration */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/10 -z-10" />
       
-      <Card className="w-full max-w-md animate-fade-in">
-        <CardHeader className="text-center space-y-6">
+      <Card className="w-full max-w-sm sm:max-w-md animate-fade-in">
+        <CardHeader className="text-center space-y-4 sm:space-y-6 px-4 sm:px-6 pt-6 sm:pt-8">
           <div className="flex justify-center">
             <Image
               src="/quad_logo.png"
               alt="Quad"
-              width={60}
-              height={60}
-              className="rounded-2xl"
+              width={48}
+              height={48}
+              className="sm:w-[60px] sm:h-[60px] rounded-2xl"
             />
           </div>
           <div className="space-y-2">
-            <CardTitle className="text-2xl font-bold tracking-tight">Welcome back</CardTitle>
-            <p className="text-muted-foreground">
+            <CardTitle className="text-xl sm:text-2xl font-bold tracking-tight">Welcome back</CardTitle>
+            <p className="text-sm sm:text-base text-muted-foreground">
               Sign in to your Quad account
             </p>
           </div>
         </CardHeader>
         
-        <CardContent>
-          <form className="space-y-6">
-            <div className="space-y-4">
+        <CardContent className="px-4 sm:px-6 pb-6 sm:pb-8">
+          <form className="space-y-4 sm:space-y-6">
+            <div className="space-y-3 sm:space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-sm font-medium">
                   Email address
@@ -45,7 +45,7 @@ export default async function Login(props: { searchParams: Promise<Message> }) {
                   type="email"
                   placeholder="you@example.com" 
                   required 
-                  className="field-focus focus-ring"
+                  className="field-focus focus-ring h-10 sm:h-11"
                 />
               </div>
 
@@ -55,7 +55,7 @@ export default async function Login(props: { searchParams: Promise<Message> }) {
                     Password
                   </Label>
                   <Link
-                    className="text-sm text-primary hover:text-primary/80 transition-colors duration-200"
+                    className="text-xs sm:text-sm text-primary hover:text-primary/80 transition-colors duration-200"
                     href="/forgot-password"
                   >
                     Forgot password?
@@ -66,16 +66,16 @@ export default async function Login(props: { searchParams: Promise<Message> }) {
                   name="password"
                   placeholder="Enter your password"
                   required
-                  className="field-focus focus-ring"
+                  className="field-focus focus-ring h-10 sm:h-11"
                 />
               </div>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               <SubmitButton 
                 pendingText="Signing in..." 
                 formAction={signInAction}
-                className="w-full rounded-xl py-6 text-base font-medium shadow-lg hover:shadow-xl transition-all duration-300"
+                className="w-full rounded-xl py-3 sm:py-6 text-sm sm:text-base font-medium shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 Sign in
               </SubmitButton>
@@ -84,8 +84,8 @@ export default async function Login(props: { searchParams: Promise<Message> }) {
             </div>
           </form>
 
-          <div className="mt-8 text-center">
-            <p className="text-sm text-muted-foreground">
+          <div className="mt-6 sm:mt-8 text-center">
+            <p className="text-xs sm:text-sm text-muted-foreground">
               Don't have an account?{" "}
               <Link 
                 className="text-primary font-medium hover:text-primary/80 transition-colors duration-200" 

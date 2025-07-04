@@ -46,6 +46,7 @@ const timeSlots = Array.from({ length: 24 }, (_, i) => {
 export default function SchoolClient() {
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
     subject: '',
     minExperience: 0,
@@ -56,10 +57,9 @@ export default function SchoolClient() {
     sortBy: 'experience_desc'
   });
 
-  const router = useRouter(); // For navigation
+  const router = useRouter();
 
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-  const times = ['Morning', 'Afternoon', 'Evening'];
 
   const fetchTeachers = async () => {
     try {
@@ -123,9 +123,7 @@ export default function SchoolClient() {
 
   const handleFilterChange = (key: keyof FilterState, value: any) => {
     if (key === 'minExperience' || key === 'maxExperience') {
-      // Parse the value and handle invalid numbers
       const numValue = parseInt(value);
-      // If value is empty or NaN, set to default (0 for min, 100 for max)
       const validValue = isNaN(numValue) ? (key === 'minExperience' ? 0 : 100) : numValue;
       setFilters(prev => ({ ...prev, [key]: validValue }));
     } else {
@@ -133,166 +131,233 @@ export default function SchoolClient() {
     }
   };
 
-  // Navigate to Teacher Detail Page
   const handleTeacherClick = (teacherId: string) => {
     router.push(`teachers/${teacherId}`); 
   };
 
   return (
-    <div className="flex-1 w-full max-w-6xl mx-auto p-4 space-y-8">
-      <Card className="p-6">
-        <h2 className="text-lg font-semibold mb-4">Filters</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {/* Subject Filter */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Subject</label>
-            <Input
-              type="text"
-              placeholder="Enter subject..."
-              value={filters.subject}
-              onChange={(e) => handleFilterChange('subject', e.target.value)}
-            />
-          </div>
+    <div className="flex-1 w-full max-w-7xl mx-auto space-y-4 sm:space-y-6 lg:space-y-8 px-4">
+      {/* Header with Filter Toggle */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Find Teachers</h1>
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className="sm:hidden bg-primary text-primary-foreground px-4 py-2 rounded-xl text-sm font-medium flex items-center justify-center w-full sm:w-auto"
+        >
+          {showFilters ? 'Hide Filters' : 'Show Filters'}
+        </button>
+      </div>
 
-          {/* Experience Range Filter */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Experience Range (years)</label>
-            <div className="flex items-center space-x-2">
+      {/* Filters */}
+      <Card className={`${showFilters ? 'block' : 'hidden'} sm:block`}>
+        <CardContent className="p-3 sm:p-4 lg:p-6">
+          <h2 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Filters</h2>
+          
+          {/* Mobile: Stacked Layout, Desktop: Grid Layout */}
+          <div className="space-y-3 sm:space-y-4 sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 sm:gap-4 lg:gap-6">
+            {/* Subject Filter */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Subject</label>
               <Input
-                type="number"
-                min={0}
-                max={filters.maxExperience}
-                value={filters.minExperience.toString()}
-                onChange={(e) => handleFilterChange('minExperience', e.target.value)}
-                className="w-20"
-              />
-              <span>to</span>
-              <Input
-                type="number"
-                min={filters.minExperience}
-                max={100}
-                value={filters.maxExperience.toString()}
-                onChange={(e) => handleFilterChange('maxExperience', e.target.value)}
-                className="w-20"
+                type="text"
+                placeholder="Enter subject..."
+                value={filters.subject}
+                onChange={(e) => handleFilterChange('subject', e.target.value)}
+                className="h-9 sm:h-10"
               />
             </div>
-          </div>
 
-          {/* Availability Filter */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Availability</label>
-            <div className="flex space-x-2">
+            {/* Experience Range Filter */}
+            <div className="space-y-2 sm:col-span-2 lg:col-span-1">
+              <label className="text-sm font-medium">Experience Range (years)</label>
+              <div className="flex items-center space-x-2">
+                <Input
+                  type="number"
+                  min={0}
+                  max={filters.maxExperience}
+                  value={filters.minExperience.toString()}
+                  onChange={(e) => handleFilterChange('minExperience', e.target.value)}
+                  className="w-16 sm:w-20 h-9 sm:h-10 text-xs sm:text-sm"
+                  placeholder="Min"
+                />
+                <span className="text-xs sm:text-sm text-muted-foreground">to</span>
+                <Input
+                  type="number"
+                  min={filters.minExperience}
+                  max={100}
+                  value={filters.maxExperience.toString()}
+                  onChange={(e) => handleFilterChange('maxExperience', e.target.value)}
+                  className="w-16 sm:w-20 h-9 sm:h-10 text-xs sm:text-sm"
+                  placeholder="Max"
+                />
+              </div>
+            </div>
+
+            {/* Grade Level Filter */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Grade Level</label>
               <Select
-                value={filters.availability?.day || ''}
-                onValueChange={(day: string) =>
-                  handleFilterChange('availability', day ? { day } : null)
-                }
+                value={filters.teaching_grade?.toString() || 'any'}
+                onValueChange={(value) => handleFilterChange('teaching_grade', value === 'any' ? null : parseInt(value))}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Day" />
+                <SelectTrigger className="h-9 sm:h-10">
+                  <SelectValue placeholder="Select grade" />
                 </SelectTrigger>
                 <SelectContent>
-                  {days.map((day) => (
-                    <SelectItem key={day} value={day}>
-                      {day}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select
-                value={filters.availability?.startTime || ''}
-                onValueChange={(startTime: string) =>
-                  handleFilterChange('availability', {
-                    ...filters.availability,
-                    startTime
-                  })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Start Time" />
-                </SelectTrigger>
-                <SelectContent>
-                  {timeSlots.map((time) => (
-                    <SelectItem key={time} value={time}>
-                      {time}
+                  <SelectItem value="any">Any Grade</SelectItem>
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((grade) => (
+                    <SelectItem key={grade} value={grade.toString()}>
+                      Grade {grade}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Availability Filter - Mobile Stacked */}
+            <div className="space-y-2 sm:col-span-2 lg:col-span-1">
+              <label className="text-sm font-medium">Availability</label>
+              <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
+                <Select
+                  value={filters.availability?.day || ''}
+                  onValueChange={(day: string) =>
+                    handleFilterChange('availability', day ? { day } : null)
+                  }
+                >
+                  <SelectTrigger className="h-9 sm:h-10">
+                    <SelectValue placeholder="Day" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {days.map((day) => (
+                      <SelectItem key={day} value={day}>
+                        {day}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Select
+                  value={filters.availability?.startTime || ''}
+                  onValueChange={(startTime: string) =>
+                    handleFilterChange('availability', {
+                      ...filters.availability,
+                      startTime
+                    })
+                  }
+                >
+                  <SelectTrigger className="h-9 sm:h-10">
+                    <SelectValue placeholder="Start Time" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {timeSlots.map((time) => (
+                      <SelectItem key={time} value={time}>
+                        {time}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Sort Options */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Sort By</label>
+              <Select
+                value={filters.sortBy}
+                onValueChange={(value: FilterState['sortBy']) => handleFilterChange('sortBy', value)}
+              >
+                <SelectTrigger className="h-9 sm:h-10">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="experience_desc">Experience (High to Low)</SelectItem>
+                  <SelectItem value="experience_asc">Experience (Low to High)</SelectItem>
+                  <SelectItem value="name_asc">Name (A-Z)</SelectItem>
+                  <SelectItem value="name_desc">Name (Z-A)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          {/* Sort Options */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Sort By</label>
-            <Select
-              value={filters.sortBy}
-              onValueChange={(value: FilterState['sortBy']) => handleFilterChange('sortBy', value)}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="experience_desc">Experience (High to Low)</SelectItem>
-                <SelectItem value="experience_asc">Experience (Low to High)</SelectItem>
-                <SelectItem value="name_asc">Name (A-Z)</SelectItem>
-                <SelectItem value="name_desc">Name (Z-A)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Grade Level</label>
-            <Select
-              value={filters.teaching_grade?.toString() || 'any'}
-              onValueChange={(value) => handleFilterChange('teaching_grade', value === 'any' ? null : parseInt(value))}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select grade" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="any">Any Grade</SelectItem>
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((grade) => (
-                  <SelectItem key={grade} value={grade.toString()}>
-                    Grade {grade}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+        </CardContent>
       </Card>
 
-      <div className="space-y-4">
-        <h1 className="text-2xl font-bold">Teachers List</h1>
+      {/* Teachers List */}
+      <div className="space-y-3 sm:space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <h2 className="text-lg sm:text-xl font-bold">Available Teachers</h2>
+          {teachers.length > 0 && (
+            <span className="text-sm text-muted-foreground">
+              {teachers.length} teacher{teachers.length !== 1 ? 's' : ''} found
+            </span>
+          )}
+        </div>
+        
         {loading ? (
-          <p>Loading...</p>
+          <div className="text-center py-8 sm:py-12">
+            <p className="text-muted-foreground text-sm sm:text-base">Loading teachers...</p>
+          </div>
         ) : teachers.length > 0 ? (
-          <div className="grid gap-4">
+          <div className="grid gap-3 sm:gap-4 lg:gap-6">
             {teachers.map((teacher) => (
-              <Card key={teacher.id} onClick={() => handleTeacherClick(teacher.id)} className="cursor-pointer">
-                <CardContent className="p-4">
-                  <h2 className="text-xl font-semibold">{teacher.full_name}</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
-                    <p><span className="font-medium">Subjects:</span> {teacher.subjects.join(", ")}</p>
-                    <p><span className="font-medium">Experience:</span> {teacher.experience_years} years</p>
-                    <p><span className="font-medium">Grade Level:</span> {teacher.teaching_grade ? `Grade ${teacher.teaching_grade}` : 'Not specified'}</p>
-                    <p><span className="font-medium">Qualifications:</span> {teacher.qualifications.join(", ")}</p>
-                    <p>
-                      <span className="font-medium">Availability:</span>{" "}
-                      {teacher.availability?.schedule.map((slot, index) => (
-                        <span key={index}>
-                          {slot.day} ({slot.time_range.start} - {slot.time_range.end})
-                          {index < teacher.availability.schedule.length - 1 ? ', ' : ''}
+              <Card 
+                key={teacher.id} 
+                onClick={() => handleTeacherClick(teacher.id)} 
+                className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.01]"
+              >
+                <CardContent className="p-3 sm:p-4 lg:p-6">
+                  <div className="space-y-3 sm:space-y-4">
+                    <h2 className="text-base sm:text-lg lg:text-xl font-semibold">{teacher.full_name}</h2>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 lg:gap-4 text-sm">
+                      <div className="flex flex-col sm:flex-row sm:items-center">
+                        <span className="font-medium text-muted-foreground shrink-0">Subjects:</span>
+                        <span className="sm:ml-2 truncate">{teacher.subjects.join(", ")}</span>
+                      </div>
+                      
+                      <div className="flex flex-col sm:flex-row sm:items-center">
+                        <span className="font-medium text-muted-foreground shrink-0">Experience:</span>
+                        <span className="sm:ml-2">{teacher.experience_years} years</span>
+                      </div>
+                      
+                      <div className="flex flex-col sm:flex-row sm:items-center">
+                        <span className="font-medium text-muted-foreground shrink-0">Grade Level:</span>
+                        <span className="sm:ml-2">
+                          {teacher.teaching_grade ? `Grade ${teacher.teaching_grade}` : 'Not specified'}
                         </span>
-                      ))}
-                    </p>
+                      </div>
+                      
+                      <div className="flex flex-col sm:flex-row sm:items-center">
+                        <span className="font-medium text-muted-foreground shrink-0">Qualifications:</span>
+                        <span className="sm:ml-2 truncate">{teacher.qualifications.join(", ")}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="pt-2 sm:pt-3 border-t border-border">
+                      <div className="flex flex-col gap-2">
+                        <span className="font-medium text-muted-foreground text-xs sm:text-sm">Availability:</span>
+                        <div className="flex flex-wrap gap-1 text-xs">
+                          {teacher.availability?.schedule.map((slot, index) => (
+                            <span 
+                              key={index}
+                              className="bg-secondary px-2 py-1 rounded-md text-secondary-foreground"
+                            >
+                              {slot.day} ({slot.time_range.start} - {slot.time_range.end})
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
         ) : (
-          <p>No teachers found matching your criteria.</p>
+          <div className="text-center py-8 sm:py-12">
+            <p className="text-muted-foreground text-sm sm:text-base">
+              No teachers found matching your criteria. Try adjusting your filters.
+            </p>
+          </div>
         )}
       </div>
     </div>

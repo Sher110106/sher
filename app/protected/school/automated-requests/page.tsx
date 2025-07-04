@@ -569,42 +569,99 @@ export default function AutomatedRequestsPage() {
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 pt-4">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className="flex items-center gap-2"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                    Previous
-                  </Button>
-                  
-                  <div className="flex gap-1">
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                      <Button
-                        key={page}
-                        variant={currentPage === page ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => handlePageChange(page)}
-                        className="w-10 h-10"
-                      >
-                        {page}
-                      </Button>
-                    ))}
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-2 pt-4">
+                  {/* Mobile: Compact Previous/Next */}
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 h-8 sm:h-9"
+                    >
+                      <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
+                      <span className="hidden sm:inline">Previous</span>
+                      <span className="sm:hidden">Prev</span>
+                    </Button>
+                    
+                    {/* Mobile: Show only current page info */}
+                    <div className="flex items-center gap-1 sm:hidden text-sm text-muted-foreground">
+                      <span>{currentPage}</span>
+                      <span>/</span>
+                      <span>{totalPages}</span>
+                    </div>
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 h-8 sm:h-9"
+                    >
+                      <span className="hidden sm:inline">Next</span>
+                      <span className="sm:hidden">Next</span>
+                      <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
+                    </Button>
                   </div>
                   
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                    className="flex items-center gap-2"
-                  >
-                    Next
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
+                  {/* Desktop: Full pagination */}
+                  <div className="hidden sm:flex gap-1">
+                    {(() => {
+                      const pages = [];
+                      const maxVisiblePages = 5;
+                      
+                      if (totalPages <= maxVisiblePages) {
+                        // Show all pages if total is small
+                        for (let i = 1; i <= totalPages; i++) {
+                          pages.push(i);
+                        }
+                      } else {
+                        // Show smart pagination with ellipsis
+                        if (currentPage <= 3) {
+                          // Show first pages + ellipsis + last
+                          pages.push(1, 2, 3, 4);
+                          if (totalPages > 5) pages.push('...');
+                          pages.push(totalPages);
+                        } else if (currentPage >= totalPages - 2) {
+                          // Show first + ellipsis + last pages
+                          pages.push(1);
+                          if (totalPages > 5) pages.push('...');
+                          for (let i = totalPages - 3; i <= totalPages; i++) {
+                            pages.push(i);
+                          }
+                        } else {
+                          // Show first + ellipsis + current-1, current, current+1 + ellipsis + last
+                          pages.push(1);
+                          pages.push('...');
+                          pages.push(currentPage - 1, currentPage, currentPage + 1);
+                          pages.push('...');
+                          pages.push(totalPages);
+                        }
+                      }
+                      
+                      return pages.map((page, index) => {
+                        if (page === '...') {
+                          return (
+                            <span key={`ellipsis-${index}`} className="flex items-center justify-center w-8 h-8 text-muted-foreground">
+                              ...
+                            </span>
+                          );
+                        }
+                        
+                        return (
+                          <Button
+                            key={page}
+                            variant={currentPage === page ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => handlePageChange(page as number)}
+                            className="w-8 h-8 p-0 text-sm"
+                          >
+                            {page}
+                          </Button>
+                        );
+                      });
+                    })()}
+                  </div>
                 </div>
               )}
             </div>
