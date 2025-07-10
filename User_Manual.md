@@ -149,11 +149,11 @@ A: Yes – the interface is fully responsive on modern browsers.
 A: Google Meet auto-recording requires a Google Workspace Enterprise subscription.  Until that's available you can upload manual recordings.
 
 **Q: How do I delete my account?**  
-A: Contact support at `support@example.com` from your registered email and we'll remove your data within 24 hours.
+A: Contact support at `sherpartap1996@gmail.com` from your registered email and we'll remove your data within 24 hours.
 
 ---
 
 ## 6. Support & Feedback
-Need help or want to suggest a feature?  Email us at **support@example.com** or open an issue on the [GitHub repository](https://github.com/Sher110106/sher).
+Need help or want to suggest a feature?  Email us at **sherpartap1996@gmail.com** or open an issue on the [GitHub repository](https://github.com/Sher110106/sher).
 
 Happy learning & teaching on Quad!
