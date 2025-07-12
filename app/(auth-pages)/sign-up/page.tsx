@@ -12,10 +12,27 @@ import Image from "next/image";
 import { SmtpMessage } from "../smtp-message";
 import { Users, GraduationCap } from "lucide-react";
 
+const SUBJECT_OPTIONS = [
+  "Math",
+  "Science",
+  "English",
+  "History",
+  "Geography",
+  "Computer Science",
+  "Art",
+  "Physical Education",
+  "Music",
+  "Economics",
+  "Civics",
+  "Other"
+];
+
 export default function Signup(props: { searchParams: Promise<Message>; }) {
   const [searchParams, setSearchParams] = useState<Message | null>(null);
   const [selectedRole, setSelectedRole] = useState<'school' | 'teacher' | null>(null);
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
+  const [selectedSubject, setSelectedSubject] = useState<string>("");
+  const [customSubject, setCustomSubject] = useState<string>("");
   const [selectedQualifications, setSelectedQualifications] = useState<string[]>([]);
 
   useEffect(() => {
@@ -43,14 +60,10 @@ export default function Signup(props: { searchParams: Promise<Message>; }) {
   };
 
   const handleSubjectChange = (value: string) => {
-    setSelectedSubjects((prev) => {
-      if (prev.includes(value)) {
-        return prev.filter((subject: string) => subject !== value);
-      } else if (prev.length < 3) {
-        return [...prev, value];
-      }
-      return prev;
-    });
+    setSelectedSubject(value);
+    if (value !== "other") {
+      setCustomSubject("");
+    }
   };
 
   const handleQualificationChange = (value: string) => {
@@ -65,7 +78,17 @@ export default function Signup(props: { searchParams: Promise<Message>; }) {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     try {
-      const formData = new FormData(event.target as HTMLFormElement);
+      const form = event.target as HTMLFormElement;
+      const formData = new FormData(form);
+      // Remove any previous subjects
+      formData.delete("subjects");
+      if (selectedRole === "teacher") {
+        if (selectedSubject === "other") {
+          formData.append("subjects", customSubject);
+        } else {
+          formData.append("subjects", selectedSubject);
+        }
+      }
       await signUpAction(formData);
     } catch (error) {
       console.error("An error occurred during sign-up:", error);
@@ -262,19 +285,32 @@ export default function Signup(props: { searchParams: Promise<Message>; }) {
                     </div>
 
                     <div className="space-y-3">
-                      <Label className="text-sm font-medium">Subjects (Max 3)</Label>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
-                        {['Math', 'Science', 'English', 'History'].map((subject) => (
-                          <Label key={subject} className="flex items-center space-x-2 cursor-pointer text-sm">
-                            <Checkbox
-                              name="subjects"
-                              value={subject.toLowerCase()}
-                              checked={selectedSubjects.includes(subject.toLowerCase())}
-                              onCheckedChange={() => handleSubjectChange(subject.toLowerCase())}
-                            />
-                            <span>{subject}</span>
-                          </Label>
-                        ))}
+                      <Label className="text-sm font-medium">Subject</Label>
+                      <div className="space-y-2">
+                        <select
+                          name="subjectDropdown"
+                          value={selectedSubject}
+                          onChange={e => handleSubjectChange(e.target.value)}
+                          required
+                          className="field-focus focus-ring h-10 sm:h-11 w-full border rounded-md px-2"
+                        >
+                          <option value="" disabled>Select a subject</option>
+                          {SUBJECT_OPTIONS.map(subject => (
+                            <option key={subject.toLowerCase()} value={subject.toLowerCase()}>
+                              {subject}
+                            </option>
+                          ))}
+                        </select>
+                        {selectedSubject === "other" && (
+                          <Input
+                            name="customSubject"
+                            placeholder="Enter custom subject"
+                            value={customSubject}
+                            onChange={e => setCustomSubject(e.target.value)}
+                            required
+                            className="field-focus focus-ring h-10 sm:h-11 mt-2"
+                          />
+                        )}
                       </div>
                     </div>
 

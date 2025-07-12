@@ -21,7 +21,19 @@ export const signUpAction = async (formData: FormData) => {
   
   // Teacher specific fields
   const fullName = formData.get("fullName")?.toString();
-  const subjects = formData.getAll("subjects");
+  let subjects = formData.getAll("subjects");
+  // Handle custom subject if 'Other' is selected
+  if (subjects.length === 0) {
+    // Fallback for new dropdown logic
+    const customSubject = formData.get("customSubject")?.toString();
+    if (customSubject) {
+      subjects = [customSubject];
+    }
+  }
+  // Only allow one subject (from dropdown or custom)
+  if (subjects.length > 1) {
+    subjects = [subjects[0]];
+  }
   const qualifications = formData.getAll("qualifications"); // Now getting all selected qualifications
   const experienceYears = formData.get("experienceYears")?.toString();
   const teachingGrade = formData.get("teachingGrade")?.toString();

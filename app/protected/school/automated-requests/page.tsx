@@ -38,6 +38,20 @@ interface FormData {
 }
 
 const REQUESTS_PER_PAGE = 10;
+const SUBJECT_OPTIONS = [
+  "Math",
+  "Science",
+  "English",
+  "History",
+  "Geography",
+  "Computer Science",
+  "Art",
+  "Physical Education",
+  "Music",
+  "Economics",
+  "Civics",
+  "Other"
+];
 
 export default function AutomatedRequestsPage() {
   
@@ -50,6 +64,8 @@ export default function AutomatedRequestsPage() {
     grade_level: '1',
     min_rating: '4.0'
   })
+  const [selectedSubject, setSelectedSubject] = useState<string>("");
+  const [customSubject, setCustomSubject] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -243,11 +259,17 @@ export default function AutomatedRequestsPage() {
     setIsSubmitting(true)
 
     try {
+      let subjectToSend = "";
+      if (selectedSubject === "other") {
+        subjectToSend = customSubject;
+      } else {
+        subjectToSend = selectedSubject;
+      }
       const response = await fetch('/api/automated-requests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          subject: formData.subject,
+          subject: subjectToSend,
           schedule: {
             date: formData.date,
             time: formData.time
@@ -279,6 +301,8 @@ export default function AutomatedRequestsPage() {
         grade_level: '1',
         min_rating: '4.0'
       })
+      setSelectedSubject("");
+      setCustomSubject("");
 
       // Refresh requests after successful submission
       fetchRequests()
@@ -382,14 +406,33 @@ export default function AutomatedRequestsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="subject" className="text-sm font-medium">Subject</Label>
-                <Input
+                <select
                   id="subject"
+                  value={selectedSubject}
+                  onChange={e => {
+                    setSelectedSubject(e.target.value);
+                    if (e.target.value !== "other") setCustomSubject("");
+                  }}
                   required
-                  value={formData.subject}
-                  onChange={e => setFormData({...formData, subject: e.target.value})}
-                  placeholder="Mathematics"
-                  className="field-focus focus-ring"
-                />
+                  className="field-focus focus-ring h-10 w-full border rounded-md px-2"
+                >
+                  <option value="">Select a subject</option>
+                  {SUBJECT_OPTIONS.map(subject => (
+                    <option key={subject.toLowerCase()} value={subject.toLowerCase()}>
+                      {subject}
+                    </option>
+                  ))}
+                </select>
+                {selectedSubject === "other" && (
+                  <Input
+                    type="text"
+                    placeholder="Enter custom subject"
+                    value={customSubject}
+                    onChange={e => setCustomSubject(e.target.value)}
+                    required
+                    className="field-focus focus-ring h-10 mt-2"
+                  />
+                )}
               </div>
 
               <div className="space-y-2">

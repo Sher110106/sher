@@ -45,7 +45,13 @@ export async function GET(req: Request) {
 
     // Apply filters
     if (subject) {
-      query = query.contains("subjects", [subject]);
+      // Case-insensitive subject match
+      // Use ilike for array of subjects (Postgres array column)
+      // Supabase does not support ilike directly on arrays, so we filter in JS after fetching
+      // To avoid fetching too many rows, we can still use contains for a rough filter
+      query = query.or(
+        `subjects.cs.{${JSON.stringify([subject])}},subjects.cs.{${JSON.stringify([subject.toLowerCase()])}},subjects.cs.{${JSON.stringify([subject.toUpperCase()])}}`
+      );
     }
 
     if (minExperience || maxExperience) {
@@ -96,6 +102,13 @@ export async function GET(req: Request) {
 
     // Post-process the results to ensure availability matches
     let filteredData = data;
+    // Case-insensitive subject filter (final check)
+    if (subject) {
+      filteredData = filteredData.filter(teacher =>
+        Array.isArray(teacher.subjects) &&
+        teacher.subjects.some((s: string) => s.toLowerCase() === subject.toLowerCase())
+      );
+    }
     if (availability?.day && availability?.startTime) {
       filteredData = data.filter(teacher => {
         return teacher.availability?.schedule?.some((slot: AvailabilitySlot) => 

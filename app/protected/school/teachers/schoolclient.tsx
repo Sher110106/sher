@@ -43,6 +43,21 @@ const timeSlots = Array.from({ length: 24 }, (_, i) => {
   return `${hour}:00`;
 });
 
+const SUBJECT_OPTIONS = [
+  "Math",
+  "Science",
+  "English",
+  "History",
+  "Geography",
+  "Computer Science",
+  "Art",
+  "Physical Education",
+  "Music",
+  "Economics",
+  "Civics",
+  "Other"
+];
+
 export default function SchoolClient() {
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,6 +71,8 @@ export default function SchoolClient() {
     availability: null,
     sortBy: 'experience_desc'
   });
+  const [selectedSubject, setSelectedSubject] = useState<string>("");
+  const [customSubject, setCustomSubject] = useState<string>("");
 
   const router = useRouter();
 
@@ -66,8 +83,14 @@ export default function SchoolClient() {
       setLoading(true);
       const queryParams = new URLSearchParams();
       
-      if (filters.subject) {
-        queryParams.set('subject', filters.subject);
+      let subjectToSearch = "";
+      if (selectedSubject === "other") {
+        subjectToSearch = customSubject;
+      } else if (selectedSubject) {
+        subjectToSearch = selectedSubject;
+      }
+      if (subjectToSearch) {
+        queryParams.set('subject', subjectToSearch);
       }
       if (filters.minExperience > 0) {
         queryParams.set('minExperience', filters.minExperience.toString());
@@ -158,13 +181,31 @@ export default function SchoolClient() {
             {/* Subject Filter */}
             <div className="space-y-2">
               <label className="text-sm font-medium">Subject</label>
-              <Input
-                type="text"
-                placeholder="Enter subject..."
-                value={filters.subject}
-                onChange={(e) => handleFilterChange('subject', e.target.value)}
-                className="h-9 sm:h-10"
-              />
+              <select
+                value={selectedSubject}
+                onChange={e => {
+                  setSelectedSubject(e.target.value);
+                  if (e.target.value !== "other") setCustomSubject("");
+                }}
+                className="h-9 sm:h-10 w-full border rounded-md px-2"
+              >
+                <option value="">Select a subject</option>
+                {SUBJECT_OPTIONS.map(subject => (
+                  <option key={subject.toLowerCase()} value={subject.toLowerCase()}>
+                    {subject}
+                  </option>
+                ))}
+              </select>
+              {selectedSubject === "other" && (
+                <Input
+                  type="text"
+                  placeholder="Enter custom subject..."
+                  value={customSubject}
+                  onChange={e => setCustomSubject(e.target.value)}
+                  className="h-9 sm:h-10 mt-2"
+                  required
+                />
+              )}
             </div>
 
             {/* Experience Range Filter */}
