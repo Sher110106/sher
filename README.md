@@ -337,3 +337,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - Built with [Next.js](https://nextjs.org/)
 - Database by [Supabase](https://supabase.com/)
 - Emails by [Resend](https://resend.com/)
+
+## Google Search Console Verification
+
+This project includes a Google Search Console verification meta tag in `app/layout.tsx`. Do not remove this tag or you may lose site verification.

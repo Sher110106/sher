@@ -44,6 +44,7 @@ export default function RootLayout({
             gtag('config', 'G-XYGMYVJ43M');
           `}
         </Script>
+        <meta name="google-site-verification" content="4F4N9rvUsHBNxaW3ac7wdBUpG1iep7nQYZaGJJK6VRY" />
       </head>
       <body className="bg-background text-foreground">
         <ThemeProvider
