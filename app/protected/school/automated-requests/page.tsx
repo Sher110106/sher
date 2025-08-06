@@ -265,6 +265,16 @@ export default function AutomatedRequestsPage() {
       } else {
         subjectToSend = selectedSubject;
       }
+      const formatTimeTo12Hour = (time24: string) => {
+        if (!time24) return '';
+        const [hourStr, minuteStr] = time24.split(":");
+        let hour = parseInt(hourStr, 10);
+        const minute = minuteStr;
+        const ampm = hour >= 12 ? "PM" : "AM";
+        hour = hour % 12;
+        if (hour === 0) hour = 12;
+        return `${hour.toString().padStart(2, '0')}:${minute} ${ampm}`;
+      };
       const response = await fetch('/api/automated-requests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -272,7 +282,7 @@ export default function AutomatedRequestsPage() {
           subject: subjectToSend,
           schedule: {
             date: formData.date,
-            time: formData.time
+            time: formatTimeTo12Hour(formData.time)
           },
           grade_level: parseInt(formData.grade_level),
           minimum_rating: parseFloat(formData.min_rating)
