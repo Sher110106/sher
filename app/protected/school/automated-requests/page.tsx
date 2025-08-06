@@ -411,7 +411,12 @@ export default function AutomatedRequestsPage() {
                   value={selectedSubject}
                   onChange={e => {
                     setSelectedSubject(e.target.value);
-                    if (e.target.value !== "other") setCustomSubject("");
+                    if (e.target.value !== "other") {
+                      setCustomSubject("");
+                      setFormData({ ...formData, subject: e.target.value });
+                    } else {
+                      setFormData({ ...formData, subject: "" });
+                    }
                   }}
                   required
                   className="field-focus focus-ring h-10 w-full border rounded-md px-2"
@@ -428,7 +433,10 @@ export default function AutomatedRequestsPage() {
                     type="text"
                     placeholder="Enter custom subject"
                     value={customSubject}
-                    onChange={e => setCustomSubject(e.target.value)}
+                    onChange={e => {
+                      setCustomSubject(e.target.value);
+                      setFormData({ ...formData, subject: e.target.value });
+                    }}
                     required
                     className="field-focus focus-ring h-10 mt-2"
                   />
