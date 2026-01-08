@@ -13,22 +13,26 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Check, X, ChevronLeft, ChevronRight, Calendar, MapPin, BookOpen, Clock, Link2, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Check, X, ChevronLeft, ChevronRight, Calendar, MapPin, BookOpen, Clock, Link2, AlertCircle, CheckCircle2, History, Ban, RefreshCw, AlertTriangle } from "lucide-react";
+import { CancelSessionModal } from './CancelSessionModal';
+import { RescheduleModal } from './RescheduleModal';
 
 interface Schedule {
-  day: string;
-  startTime: string;
-  endTime: string;
+  date: string; // Updated to match DB structure observed
+  time: string;
 }
 
 interface TeachingRequest {
   id: string;
   school_id: string;
   teacher_id: string;
-  status: string;
+  status: 'pending' | 'accepted' | 'rejected' | 'cancelled';
   created_at: string;
   subject: string;
-  schedule: Schedule[] | null;
+  schedule: Schedule | null;
+  cancelled_at?: string;
+  cancellation_reason?: string;
+  cancelled_by?: string;
   school: {
     school_name: string;
     state: string;
@@ -67,26 +71,23 @@ const formatDate = (dateString: string) => {
   return new Intl.DateTimeFormat('en-US', options).format(date);
 };
 
-const parseSchedule = (scheduleData: any): Schedule[] => {
+const parseSchedule = (scheduleData: any): Schedule | null => {
+  if (!scheduleData) return null;
   try {
     const schedule = typeof scheduleData === 'string' 
       ? JSON.parse(scheduleData) 
       : scheduleData;
     
-    // Handle single schedule object
-    if (schedule && !Array.isArray(schedule)) {
-      const date = new Date(schedule.date);
-      return [{
-        day: date.toLocaleDateString('en-US', { weekday: 'long' }),
-        startTime: schedule.time,
-        endTime: '' // Remove end time
-      }];
+    if (schedule && schedule.date && schedule.time) {
+      return {
+        date: schedule.date,
+        time: schedule.time
+      };
     }
-    
-    return Array.isArray(schedule) ? schedule : [];
+    return null;
   } catch (error) {
     console.error('Error parsing schedule:', error);
-    return [];
+    return null;
   }
 };
 
@@ -94,12 +95,10 @@ const formatSchedule = (scheduleData: any): string => {
   if (!scheduleData) return 'No schedule set';
   
   const schedule = parseSchedule(scheduleData);
-  if (schedule.length === 0) return 'No schedule set';
+  if (!schedule) return 'No schedule set';
 
-  return schedule.map(slot => {
-    const date = new Date(scheduleData.date);
-    return `${date.toLocaleDateString('en-US', { weekday: 'short' })}, ${scheduleData.time}`;
-  }).join(', ');
+  const date = new Date(schedule.date);
+  return `${date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })} at ${schedule.time}`;
 };
 
 export function TeachingRequestsList({ 
@@ -119,6 +118,12 @@ export function TeachingRequestsList({
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [pendingRequestId, setPendingRequestId] = useState<string | null>(null);
   const [oauthStatus, setOauthStatus] = useState<'idle' | 'success' | 'error'>('idle');
+
+  // Cancellation & Rescheduling state
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showRescheduleModal, setShowRescheduleModal] = useState(false);
+  const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
+  const [selectedRequestSchedule, setSelectedRequestSchedule] = useState<Schedule | null>(null);
 
   // Calculate pagination values
   const totalPages = Math.ceil(allRequests.length / REQUESTS_PER_PAGE);
@@ -225,6 +230,17 @@ export function TeachingRequestsList({
     setShowAuthModal(false);
     // Redirect to Google OAuth
     window.location.href = `/api/auth/google?teacherId=${userId}`;
+  };
+
+  const handleOpenCancel = (requestId: string) => {
+    setSelectedRequestId(requestId);
+    setShowCancelModal(true);
+  };
+
+  const handleOpenReschedule = (request: TeachingRequest) => {
+    setSelectedRequestId(request.id);
+    setSelectedRequestSchedule(parseSchedule(request.schedule));
+    setShowRescheduleModal(true);
   };
 
   const handlePageChange = (page: number) => {
@@ -420,7 +436,9 @@ export function TeachingRequestsList({
                               ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400'
                               : request.status === 'accepted'
                               ? 'bg-green-100 text-green-700 dark:bg-green-950/30 dark:text-green-400'
-                              : 'bg-red-100 text-red-700 dark:bg-red-950/30 dark:text-red-400'
+                              : request.status === 'cancelled'
+                              ? 'bg-red-100 text-red-700 dark:bg-red-950/30 dark:text-red-400'
+                              : 'bg-gray-100 text-gray-700 dark:bg-gray-950/30 dark:text-gray-400'
                           }`}
                         >
                           {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
@@ -431,6 +449,18 @@ export function TeachingRequestsList({
                       </div>
                     </div>
                   </div>
+
+                  {request.status === 'cancelled' && (
+                    <div className="bg-red-50 dark:bg-red-950/20 p-3 rounded-xl border border-red-100 dark:border-red-900/30 flex items-start gap-3">
+                      <AlertTriangle className="h-4 w-4 text-red-600 mt-0.5" />
+                      <div>
+                        <p className="text-xs font-bold text-red-700 dark:text-red-400 uppercase tracking-wider">Session Cancelled</p>
+                        <p className="text-sm text-red-600 dark:text-red-300 mt-1">
+                          {request.cancellation_reason || 'No reason provided'}
+                        </p>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                     <div className="flex items-center gap-2">
@@ -456,36 +486,83 @@ export function TeachingRequestsList({
                 </div>
                 
                 {/* Action Buttons */}
-                {request.status === 'pending' && (
-                  <div className="flex gap-3 lg:flex-col lg:w-auto">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleStatusUpdate(request.id, 'rejected')}
-                      disabled={loading[request.id]}
-                      className="flex-1 lg:flex-none text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300 dark:border-red-800 dark:hover:bg-red-950/20 transition-all duration-200"
-                    >
-                      <X className="h-4 w-4 mr-2" />
-                      Reject
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => handleStatusUpdate(request.id, 'accepted')}
-                      disabled={loading[request.id]}
-                      className="flex-1 lg:flex-none bg-green-600 hover:bg-green-700 shadow-md hover:shadow-lg transition-all duration-200"
-                    >
-                      <Check className="h-4 w-4 mr-2" />
-                      Accept
-                    </Button>
-                  </div>
-                )}
+                <div className="flex gap-3 lg:flex-col lg:w-40">
+                  {request.status === 'pending' && (
+                    <>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleStatusUpdate(request.id, 'rejected')}
+                        disabled={loading[request.id]}
+                        className="flex-1 lg:flex-none text-red-600 border-red-200 hover:bg-red-50 transition-all duration-200"
+                      >
+                        <X className="h-4 w-4 mr-2" />
+                        Reject
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => handleStatusUpdate(request.id, 'accepted')}
+                        disabled={loading[request.id]}
+                        className="flex-1 lg:flex-none bg-green-600 hover:bg-green-700 shadow-md transition-all duration-200"
+                      >
+                        <Check className="h-4 w-4 mr-2" />
+                        Accept
+                      </Button>
+                    </>
+                  )}
+
+                  {request.status === 'accepted' && (
+                    <>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleOpenReschedule(request)}
+                        className="flex-1 lg:flex-none border-primary/20 hover:bg-primary/5 transition-all duration-200"
+                      >
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                        Reschedule
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleOpenCancel(request.id)}
+                        className="flex-1 lg:flex-none text-muted-foreground hover:text-red-600 hover:bg-red-50 transition-all duration-200"
+                      >
+                        <Ban className="h-4 w-4 mr-2" />
+                        Cancel
+                      </Button>
+                    </>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {/* Pagination */}
+      {/* Pagination and Modals */}
+      <CancelSessionModal
+        isOpen={showCancelModal}
+        onOpenChange={setShowCancelModal}
+        requestId={selectedRequestId || ''}
+        onSuccess={() => {
+          // Re-fetch or update local state could happen here,
+          // but real-time subscription will handle it.
+        }}
+      />
+
+      {selectedRequestSchedule && (
+        <RescheduleModal
+          isOpen={showRescheduleModal}
+          onOpenChange={setShowRescheduleModal}
+          requestId={selectedRequestId || ''}
+          currentSchedule={selectedRequestSchedule}
+          onSuccess={() => {
+            // Success toast already in modal
+          }}
+        />
+      )}
+
       {totalPages > 1 && (
         <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-2 pt-4">
           {/* Mobile: Compact Previous/Next */}

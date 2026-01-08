@@ -1,10 +1,6 @@
-import { Resend } from 'resend';
 import { createClient } from "@/utils/supabase/server";
-import { render } from '@react-email/render';
-import EmailTemplate from '@/emails/TeachingRequestEmail';
 import { createMeetingWithUserAuth } from '@/utils/google-meet';
-
-const resend = new Resend(process.env.RESEND_API_KEY!);
+import { sendEmail } from '@/utils/email';
 
 interface TeacherProfile {
   full_name: string;
@@ -26,6 +22,7 @@ interface TeachingRequest {
     time: string;
   };
   status: 'pending' | 'accepted' | 'rejected';
+  cancellation_reason?: string;
 }
 
 export async function POST(req: Request) {
@@ -44,41 +41,67 @@ export async function POST(req: Request) {
     }
 
     const payload = JSON.parse(rawBody);
-    const { type, record, table, schema } = payload;
+    const { record } = payload;
     
-    if (!type || !record) {
+    if (!record) {
       return new Response('Invalid payload', { status: 400 });
     }
     
     const supabase = await createClient();
-    console.log('record', record);
-    const { data: teacherData, error: teacherError } = await supabase
+    const { data: teacherData } = await supabase
       .from('teacher_profiles')
       .select('full_name, email')
       .eq('id', record.teacher_id)
       .single();
   
-    const { data: schoolData, error: schoolError } = await supabase
+    const { data: schoolData } = await supabase
       .from('school_profiles')
       .select('school_name, email')
       .eq('id', record.school_id)
       .single();
 
-    if (teacherError || schoolError) {
-      console.error('Profile fetch error:', { teacherError, schoolError });
+    if (!teacherData || !schoolData) {
+      console.error('Profile fetch error');
       return new Response('Error processing webhook', { status: 500 });
     }
     
     switch (record.status) {
       case 'pending':
-        await sendPendingEmail(teacherData, schoolData, record);
-        console.log('Pending email sent');
+        await sendEmail({
+            to: teacherData.email,
+            subject: 'New Teaching Request',
+            teacherName: teacherData.full_name,
+            schoolName: schoolData.school_name,
+            teachingSubject: record.subject,
+            schedule: record.schedule,
+            status: 'pending'
+        });
         break;
       case 'accepted':
         await handleAcceptedRequest(teacherData, schoolData, record, supabase);
         break;
       case 'rejected':
-        await sendRejectionEmail(teacherData, schoolData, record);
+        await sendEmail({
+            to: schoolData.email,
+            subject: 'Teaching Request Declined',
+            teacherName: teacherData.full_name,
+            schoolName: schoolData.school_name,
+            teachingSubject: record.subject,
+            schedule: record.schedule,
+            status: 'rejected'
+        });
+        break;
+      case 'cancelled':
+        await sendEmail({
+            to: [teacherData.email, schoolData.email],
+            subject: 'Teaching Session Cancelled',
+            teacherName: teacherData.full_name,
+            schoolName: schoolData.school_name,
+            teachingSubject: record.subject,
+            schedule: record.schedule,
+            status: 'cancelled',
+            cancellationReason: record.cancellation_reason
+        });
         break;
     }
 
@@ -98,16 +121,15 @@ async function handleAcceptedRequest(
   try {
     console.log('Handling accepted request:', { recordId: record.id, teacherId: record.teacher_id });
     const { data: existingMeeting } = await supabase
-    .from('meeting_details')
-    .select('meet_link, meet_id, summary, description')
-    .eq('teaching_request_id', record.id)
-    .single();
+      .from('meeting_details')
+      .select('id')
+      .eq('teaching_request_id', record.id)
+      .single();
 
-  if (existingMeeting) {
-    console.log('Meeting already exists for this request:', existingMeeting);
-    await sendAcceptanceEmails(teacherData, schoolData, record, existingMeeting.meet_link);
-    return;
-  }
+    if (existingMeeting) {
+      console.log('Meeting already exists for request:', record.id);
+      return;
+    }
 
     // Parse schedule details
     console.log('Parsing schedule details:', record.schedule);
@@ -161,12 +183,8 @@ async function handleAcceptedRequest(
 
     // Update database with meeting details
     console.log('Updating database with meeting details...');
-    const meetingSummary = `${record.subject} Class - ${schoolData.school_name}`;
-    const meetingDescription = `Teaching session for ${record.subject}
-      Teacher: ${teacherData.full_name}
-      School: ${schoolData.school_name}
-      Date: ${record.schedule.date}
-      Time: ${record.schedule.time}`;
+    const meetingSummary = `${record.subject} Class`;
+    const meetingDescription = `Teacher: ${teacherData.full_name}\nSchool: ${schoolData.school_name}`;
     const { error: updateError } = await supabase
       .from('meeting_details')
       .insert({
@@ -184,7 +202,16 @@ async function handleAcceptedRequest(
     }
 
     console.log('Database successfully updated. Sending acceptance emails...');
-    await sendAcceptanceEmails(teacherData, schoolData, record, result.meetingLink);
+    await sendEmail({
+        to: [teacherData.email, schoolData.email],
+        subject: 'Teaching Request Accepted - Meeting Details',
+        teacherName: teacherData.full_name,
+        schoolName: schoolData.school_name,
+        teachingSubject: record.subject,
+        schedule: record.schedule,
+        meetingLink: result.meetingLink,
+        status: 'accepted'
+    });
 
     console.log('Acceptance emails sent successfully.');
   } catch (error) {
@@ -197,88 +224,4 @@ async function handleAcceptedRequest(
     });
     throw error;
   }
-}
-
-
-async function sendPendingEmail(teacherData: any, schoolData: any, record: any) {
-  try {
-    const emailHTML = await render(
-      EmailTemplate({
-        teacherName: teacherData.full_name,
-        schoolName: schoolData.school_name,
-        subject: record.subject,
-        schedule: record.schedule,
-        status: 'pending'
-      })
-    );
-
-    await resend.emails.send({
-      from: 'noreply@bugzer.xyz',
-      to: teacherData.email,
-      subject: 'New Teaching Request',
-      html: emailHTML,
-    });
-  } catch (error) {
-    console.error('Error sending pending email:', {
-      errorMessage: error instanceof Error ? error.message : 'Unknown error',
-      teacherData,
-      schoolData,
-      record
-    });
-    throw error;
-  }
-  console.log('Pending email sent');
-  console.log('teacherData', teacherData);
-  console.log('schoolData', schoolData);
-  console.log('record', record);
-
-}
-
-async function sendRejectionEmail(teacherData: any, schoolData: any, record: any) {
-  const emailHTML = await render(
-    EmailTemplate({
-      teacherName: teacherData.full_name,
-      schoolName: schoolData.school_name,
-      subject: record.subject,
-      schedule: record.schedule,
-      status: 'rejected'
-    })
-  );
-
-  await resend.emails.send({
-    from: 'noreply@bugzer.xyz',
-    to: schoolData.email,
-    subject: 'Teaching Request Declined',
-    html: emailHTML,
-  });
-}
-
-
-
-async function sendAcceptanceEmails(teacherData: any, schoolData: any, record: any, meetingLink: string) {
-  const emailHTML = await render(
-    EmailTemplate({
-      teacherName: teacherData.full_name,
-      schoolName: schoolData.school_name,
-      subject: record.subject,
-      schedule: record.schedule,
-      meetingLink,
-      status: 'accepted'
-    })
-  );
-
-  await Promise.all([
-    resend.emails.send({
-      from: 'noreply@bugzer.xyz',
-      to: teacherData.email,
-      subject: 'Teaching Request Accepted - Meeting Details',
-      html: emailHTML,
-    }),
-    resend.emails.send({
-      from: 'noreply@bugzer.xyz',
-      to: schoolData.email,
-      subject: 'Teaching Request Accepted - Meeting Details',
-      html: emailHTML,
-    })
-  ]);
 }

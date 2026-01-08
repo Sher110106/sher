@@ -133,3 +133,135 @@ export async function createMeetingWithUserAuth({
     throw error;
   }
 }
+
+export async function deleteMeeting({ 
+  teacherId, 
+  meetingId 
+}: { 
+  teacherId: string; 
+  meetingId: string; 
+}) {
+  console.log('Starting deleteMeeting', { teacherId, meetingId });
+
+  try {
+    const supabase = await createClient();
+    
+    const { data: tokenData, error: tokenError } = await supabase
+      .from('user_google_tokens')
+      .select('access_token, refresh_token, expiry_date')
+      .eq('user_id', teacherId)
+      .single();
+
+    if (tokenError || !tokenData) {
+      console.warn('No Google Auth found for user', { teacherId, tokenError });
+      throw new Error('NO_GOOGLE_AUTH');
+    }
+
+    oauth2Client.setCredentials({
+      access_token: decrypt(tokenData.access_token),
+      refresh_token: decrypt(tokenData.refresh_token),
+      expiry_date: tokenData.expiry_date
+    });
+
+    const now = Date.now();
+    const expiryDate = oauth2Client.credentials.expiry_date;
+    if (!expiryDate || now >= expiryDate - 5 * 60 * 1000) {
+      console.log('Refreshing token for deletion');
+      const { credentials } = await oauth2Client.refreshAccessToken();
+      await supabase
+        .from('user_google_tokens')
+        .update({
+          access_token: encrypt(credentials.access_token!),
+          refresh_token: credentials.refresh_token ? encrypt(credentials.refresh_token) : tokenData.refresh_token,
+          expiry_date: credentials.expiry_date
+        })
+        .eq('user_id', teacherId);
+    }
+
+    const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+    await calendar.events.delete({
+      calendarId: 'primary',
+      eventId: meetingId,
+    });
+
+    console.log('Event successfully deleted from Google Calendar');
+    return { success: true };
+  } catch (error: any) {
+    if (error?.code === 404) {
+      console.log('Google Calendar event already deleted (404)');
+      return { success: true, message: 'Event already deleted' };
+    }
+    console.error('Error in deleteMeeting:', error);
+    throw error;
+  }
+}
+
+export async function updateMeeting({
+  teacherId,
+  meetingId,
+  summary,
+  description,
+  startTime,
+  endTime
+}: {
+  teacherId: string;
+  meetingId: string;
+  summary: string;
+  description: string;
+  startTime: string;
+  endTime: string;
+}) {
+  console.log('Starting updateMeeting', { teacherId, meetingId });
+
+  try {
+    const supabase = await createClient();
+    
+    const { data: tokenData, error: tokenError } = await supabase
+      .from('user_google_tokens')
+      .select('access_token, refresh_token, expiry_date')
+      .eq('user_id', teacherId)
+      .single();
+
+    if (tokenError || !tokenData) {
+      throw new Error('NO_GOOGLE_AUTH');
+    }
+
+    oauth2Client.setCredentials({
+      access_token: decrypt(tokenData.access_token),
+      refresh_token: decrypt(tokenData.refresh_token),
+      expiry_date: tokenData.expiry_date
+    });
+
+    const now = Date.now();
+    const expiryDate = oauth2Client.credentials.expiry_date;
+    if (!expiryDate || now >= expiryDate - 5 * 60 * 1000) {
+      const { credentials } = await oauth2Client.refreshAccessToken();
+      await supabase
+        .from('user_google_tokens')
+        .update({
+          access_token: encrypt(credentials.access_token!),
+          refresh_token: credentials.refresh_token ? encrypt(credentials.refresh_token) : tokenData.refresh_token,
+          expiry_date: credentials.expiry_date
+        })
+        .eq('user_id', teacherId);
+    }
+
+    const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+    const response = await calendar.events.patch({
+      calendarId: 'primary',
+      eventId: meetingId,
+      requestBody: {
+        summary,
+        description,
+        start: { dateTime: startTime, timeZone: 'UTC' },
+        end: { dateTime: endTime, timeZone: 'UTC' },
+      }
+    });
+
+    console.log('Event successfully updated in Google Calendar');
+    return response.data;
+  } catch (error) {
+    console.error('Error in updateMeeting:', error);
+    throw error;
+  }
+}

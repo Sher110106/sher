@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
-import { Users, Edit, History, Zap, ArrowRight } from "lucide-react";
+import { Users, Edit, History, Zap, ArrowRight, ClipboardList } from "lucide-react";
 
 export default async function School(){
     const supabase=await createClient();
@@ -25,7 +25,7 @@ export default async function School(){
             </div>
 
             {/* Quick Actions Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
                 {[
                     {
                         href: "/protected/school/teachers",
@@ -34,6 +34,14 @@ export default async function School(){
                         icon: Users,
                         color: "text-blue-500",
                         bgColor: "bg-blue-50 dark:bg-blue-950/20"
+                    },
+                    {
+                        href: "/protected/school/requests",
+                        title: "My Requests",
+                        description: "Track and manage your sent requests",
+                        icon: ClipboardList,
+                        color: "text-rose-500",
+                        bgColor: "bg-rose-50 dark:bg-rose-950/20"
                     },
                     {
                         href: "/protected/school/automated-requests",

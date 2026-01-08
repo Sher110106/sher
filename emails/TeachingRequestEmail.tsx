@@ -20,7 +20,11 @@ interface EmailTemplateProps {
   };
   meetingLink?: string;
   authUrl?: string;
-  status: 'pending' | 'accepted' | 'rejected' | 'needs_auth';
+  status: 'pending' | 'accepted' | 'rejected' | 'needs_auth' | 'cancelled' | 'reschedule_proposed';
+  oldSchedule?: {
+    date: string;
+    time: string;
+  };
 }
 
 export default function EmailTemplate({
@@ -30,14 +34,18 @@ export default function EmailTemplate({
   schedule,
   meetingLink,
   authUrl,
-  status
-}: EmailTemplateProps) {
+  status,
+  cancellationReason,
+  oldSchedule
+}: EmailTemplateProps & { cancellationReason?: string }) {
   const getSubjectLine = () => {
     switch (status) {
       case 'pending': return 'New Teaching Request';
       case 'accepted': return 'Teaching Request Accepted - Meeting Details';
       case 'rejected': return 'Teaching Request Declined';
       case 'needs_auth': return 'Google Calendar Authorization Required';
+      case 'cancelled': return 'Teaching Session Cancelled';
+      case 'reschedule_proposed': return 'Proposed Reschedule for Teaching Session';
       default: return 'Teaching Request Update';
     }
   };
@@ -86,6 +94,42 @@ export default function EmailTemplate({
           </>
         );
       
+      case 'cancelled':
+        return (
+          <>
+            <Text>
+              The teaching session for {subject} scheduled for {schedule.date} at {schedule.time} has been cancelled.
+            </Text>
+            <Text>
+              <strong>Reason:</strong> {cancellationReason || 'No reason provided'}
+            </Text>
+          </>
+        );
+
+      case 'reschedule_proposed':
+        return (
+          <>
+            <Text>
+              A reschedule has been proposed for the teaching session on {subject}.
+            </Text>
+            <Text>
+              {oldSchedule && (
+                <>
+                  <strong>Old Schedule:</strong> {oldSchedule.date} at {oldSchedule.time}
+                  <br />
+                </>
+              )}
+              <strong>New Proposed Schedule:</strong> {schedule.date} at {schedule.time}
+            </Text>
+            <Text>
+              <strong>Reason:</strong> {cancellationReason || 'No reason provided'}
+            </Text>
+            <Text>
+              Please visit your dashboard to accept or decline this proposal.
+            </Text>
+          </>
+        );
+
       case 'needs_auth':
         return (
           <>
