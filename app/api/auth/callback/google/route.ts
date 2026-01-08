@@ -23,7 +23,7 @@ export async function GET(request: Request) {
     console.log('Cleared oauth_state cookie');
 
     const stateData = JSON.parse(Buffer.from(state, 'base64').toString());
-    const { teacherId, requestId } = stateData;
+    const { teacherId } = stateData;
     console.log('Decoded state data:', stateData);
 
     const { tokens } = await oauth2Client.getToken(code!);
@@ -54,49 +54,9 @@ export async function GET(request: Request) {
 
     console.log('Tokens upserted successfully for user:', teacherId);
 
-    if (requestId) {
-      console.log('Processing teaching request:', { requestId });
-
-      const { data: requestData, error: requestError } = await supabase
-        .from('teaching_requests')
-        .select('*')
-        .eq('id', requestId)
-        .single();
-
-      if (requestError) {
-        console.error('Error fetching teaching request:', requestError);
-        throw requestError;
-      }
-
-      if (requestData) {
-        console.log('Fetched teaching request data:', requestData);
-
-        const webhookResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/webhooks/teaching-requests`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              type: 'UPDATE',
-              table: 'teaching_requests',
-              record: requestData,
-              schema: 'public',
-            }),
-          }
-        );
-
-        if (!webhookResponse.ok) {
-          console.error('Webhook failed:', await webhookResponse.text());
-          throw new Error('Webhook call failed');
-        }
-
-        console.log('Webhook triggered successfully');
-      }
-    }
-
-    console.log('OAuth callback successful');
+    // Simply redirect back to dashboard with success flag
+    // The frontend will handle any pending accept requests
+    console.log('OAuth callback successful, redirecting to dashboard');
     return Response.redirect(`${process.env.NEXT_PUBLIC_BASE_URL}/protected/teacher/dashboard?oauth=success`);
   } catch (error) {
     console.error('OAuth callback error:', error);

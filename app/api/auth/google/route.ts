@@ -4,14 +4,11 @@ export async function GET(request: Request) {
   try {
     const searchParams = new URL(request.url).searchParams;
     const teacherId = searchParams.get('teacherId');
-    const requestId = searchParams.get('requestId');
+    const requestId = searchParams.get('requestId'); // Now optional
 
-    if (!teacherId || !requestId) {
-      console.error('GET Request Error: Missing required parameters.', {
-        teacherId,
-        requestId,
-      });
-      return new Response('Missing parameters', { status: 400 });
+    if (!teacherId) {
+      console.error('GET Request Error: Missing required teacherId parameter.');
+      return new Response('Missing teacherId parameter', { status: 400 });
     }
 
     console.log('Generating OAuth state for request:', {
