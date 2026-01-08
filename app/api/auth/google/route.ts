@@ -1,6 +1,14 @@
 import { getAuthUrl } from '@/utils/google-auth';
+import { rateLimit } from '@/utils/rate-limit';
+
+const limiter = rateLimit({ interval: 60 * 1000, uniqueTokenPerInterval: 500 });
 
 export async function GET(request: Request) {
+  const ip = request.headers.get('x-forwarded-for') || 'anonymous';
+  if (limiter.isRateLimited(ip, 10)) {
+    return new Response('Rate limit exceeded', { status: 429 });
+  }
+
   try {
     const searchParams = new URL(request.url).searchParams;
     const teacherId = searchParams.get('teacherId');

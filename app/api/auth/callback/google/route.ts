@@ -1,5 +1,6 @@
 import { createClient } from '@/utils/supabase/server';
 import { oauth2Client } from '@/utils/google-auth';
+import { encrypt } from '@/utils/encryption';
 
 export async function GET(request: Request) {
   console.log('OAuth callback initiated:', { url: request.url });
@@ -41,8 +42,8 @@ export async function GET(request: Request) {
       .from('user_google_tokens')
       .upsert({
         user_id: teacherId,
-        access_token: tokens.access_token,
-        refresh_token: tokens.refresh_token,
+        access_token: encrypt(tokens.access_token),
+        refresh_token: encrypt(tokens.refresh_token),
         expiry_date: tokens.expiry_date
       })
       .eq('user_id', teacherId);

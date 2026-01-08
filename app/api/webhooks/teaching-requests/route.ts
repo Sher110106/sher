@@ -6,7 +6,6 @@ import { createMeetingWithUserAuth } from '@/utils/google-meet';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
-
 interface TeacherProfile {
   full_name: string;
   email: string;
@@ -28,10 +27,23 @@ interface TeachingRequest {
   };
   status: 'pending' | 'accepted' | 'rejected';
 }
+
 export async function POST(req: Request) {
   console.log('Webhook received:', new Date().toISOString());
   try {
-    const payload = await req.json();
+    const rawBody = await req.text();
+    
+    // Verify Webhook Secret if configured
+    const secret = process.env.WEBHOOK_SECRET;
+    if (secret) {
+        const signature = req.headers.get('x-webhook-secret');
+        if (signature !== secret) {
+            console.error('Invalid webhook signature');
+            return new Response('Unauthorized', { status: 401 });
+        }
+    }
+
+    const payload = JSON.parse(rawBody);
     const { type, record, table, schema } = payload;
     
     if (!type || !record) {
@@ -137,8 +149,7 @@ async function handleAcceptedRequest(
     });
     
     if (result.needsAuth) {
-      console.warn('Authorization required for Google Meet:', { authUrl: result.authUrl });
-      await sendAuthorizationEmail(teacherData, schoolData, record, result.authUrl);
+      console.warn('Authorization required for Google Meet. Email suppressed per new flow.', { teacherId: record.teacher_id });
       return;
     }
 
@@ -242,25 +253,7 @@ async function sendRejectionEmail(teacherData: any, schoolData: any, record: any
   });
 }
 
-async function sendAuthorizationEmail(teacherData: any, schoolData: any, record: any, authUrl: string) {
-  const emailHTML = await render(
-    EmailTemplate({
-      teacherName: teacherData.full_name,
-      schoolName: schoolData.school_name,
-      subject: record.subject,
-      schedule: record.schedule,
-      authUrl,
-      status: 'needs_auth'
-    })
-  );
 
-  await resend.emails.send({
-    from: 'noreply@bugzer.xyz',
-    to: teacherData.email,
-    subject: 'Google Calendar Authorization Required',
-    html: emailHTML,
-  });
-}
 
 async function sendAcceptanceEmails(teacherData: any, schoolData: any, record: any, meetingLink: string) {
   const emailHTML = await render(

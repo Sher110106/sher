@@ -6,7 +6,7 @@ import GoogleAccountCard from '@/components/GoogleAccountCard';
 import { createClient } from '@/utils/supabase/server';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { Calendar, Edit, History, ArrowRight } from "lucide-react";
+import { Calendar, Edit, History, ArrowRight, Star } from "lucide-react";
 
 export default async function TeacherDashboard() {
   const supabase = await createClient();
@@ -30,14 +30,41 @@ export default async function TeacherDashboard() {
     `)
     .eq('teacher_id', user.id);
 
+  const { data: teacherProfile } = await supabase
+    .from('teacher_profiles')
+    .select('avg_rating, review_count')
+    .eq('id', user.id)
+    .single();
+
   return (
     <div className="space-y-8 animate-fade-in">
       {/* Header */}
-      <div className="space-y-4">
-        <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Teacher Dashboard</h1>
-        <p className="text-lg text-muted-foreground max-w-2xl">
-          Manage your teaching schedule and connect with schools that need your expertise.
-        </p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-2">
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Teacher Dashboard</h1>
+          <p className="text-lg text-muted-foreground max-w-2xl">
+            Manage your teaching schedule and connect with schools that need your expertise.
+          </p>
+        </div>
+        
+        {teacherProfile && (teacherProfile.avg_rating !== null) && (
+          <div className="flex items-center gap-3 bg-card border rounded-xl p-4 shadow-sm animate-in fade-in zoom-in duration-500">
+            <div className="text-right">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">My Performance</p>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-2xl font-black text-primary">{teacherProfile.avg_rating.toFixed(1)}</span>
+                <div className="flex flex-col">
+                  <div className="flex h-3">
+                    {[...Array(5)].map((_, i) => (
+                       <Star key={i} className={`h-3 w-3 ${i < Math.floor(teacherProfile.avg_rating!) ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`} />
+                    ))}
+                  </div>
+                  <span className="text-[10px] text-muted-foreground font-medium">{teacherProfile.review_count} Reviews</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Quick Actions and Google Account */}

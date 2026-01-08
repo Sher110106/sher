@@ -1,6 +1,7 @@
 import { createClient } from '@/utils/supabase/server';
 import { google } from 'googleapis';
 import { oauth2Client } from '@/utils/google-auth';
+import { encrypt, decrypt } from '@/utils/encryption';
 
 interface CreateMeetingParams {
   summary: string;
@@ -42,11 +43,11 @@ export async function createMeetingWithUserAuth({
       throw new Error('NO_GOOGLE_AUTH');
     }
 
-    console.log('Google tokens retrieved:', tokenData);
+    console.log('Google tokens retrieved from DB');
 
     oauth2Client.setCredentials({
-      access_token: tokenData.access_token,
-      refresh_token: tokenData.refresh_token,
+      access_token: decrypt(tokenData.access_token),
+      refresh_token: decrypt(tokenData.refresh_token),
       expiry_date: tokenData.expiry_date
     });
 
@@ -60,8 +61,8 @@ export async function createMeetingWithUserAuth({
       await supabase
         .from('user_google_tokens')
         .update({
-          access_token: credentials.access_token,
-          refresh_token: credentials.refresh_token || tokenData.refresh_token,
+          access_token: encrypt(credentials.access_token!),
+          refresh_token: credentials.refresh_token ? encrypt(credentials.refresh_token) : tokenData.refresh_token,
           expiry_date: credentials.expiry_date
         })
         .eq('user_id', teacherId);

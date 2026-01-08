@@ -15,8 +15,11 @@ export default async function Past_classes() {
         .select(`
             *,
             teacher_profiles (
+                id,
                 full_name,
-                subjects
+                subjects,
+                avg_rating,
+                review_count
             )
         `)
         .order('created_at', { ascending: false });

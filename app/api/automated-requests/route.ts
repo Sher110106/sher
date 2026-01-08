@@ -1,7 +1,10 @@
 // app/api/automated-requests/route.ts
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
+import { rateLimit } from '@/utils/rate-limit';
 
+const limiter = rateLimit({ interval: 60 * 1000, uniqueTokenPerInterval: 500 });
+ 
 interface AutomatedRequestParams {
   subject: string;
   schedule: { date: string; time: string };
@@ -10,6 +13,11 @@ interface AutomatedRequestParams {
 }
 
 export async function POST(req: Request) {
+  const ip = req.headers.get('x-forwarded-for') || 'anonymous';
+  if (limiter.isRateLimited(ip, 5)) {
+    return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
+  }
+
   const supabase = await createClient();
   
   // Authentication
