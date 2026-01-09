@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Bell, Check, CheckCheck, Loader2, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, parseISO } from 'date-fns';
 
 interface Notification {
   id: string;
@@ -246,7 +246,7 @@ export default function NotificationDrawer({ isOpen, onClose, userId }: Notifica
                         </p>
                         <div className="flex items-center gap-2 mt-2">
                           <span className="text-xs text-muted-foreground">
-                            {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+                            {formatDistanceToNow(parseISO(notification.created_at), { addSuffix: true })}
                           </span>
                           {link && (
                             <span className="text-xs text-primary flex items-center gap-1">

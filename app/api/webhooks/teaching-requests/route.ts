@@ -25,19 +25,6 @@ interface TeachingRequest {
   cancellation_reason?: string;
 }
 
-async function createNotification(supabase: any, data: {
-  user_id: string;
-  type: string;
-  title: string;
-  message: string;
-  data?: any;
-}) {
-  const { error } = await supabase
-    .from('notifications')
-    .insert([data]);
-  if (error) console.error('Error creating notification:', error);
-}
-
 export async function POST(req: Request) {
   console.log('Webhook received:', new Date().toISOString());
   try {
@@ -83,86 +70,44 @@ export async function POST(req: Request) {
     switch (record.status) {
       case 'pending':
         // Notify Teacher
-        await Promise.all([
-          sendEmail({
-            to: teacherData.email,
-            subject: 'New Teaching Request',
-            teacherName: teacherData.full_name,
-            schoolName: schoolData.school_name,
-            teachingSubject: record.subject,
-            schedule: record.schedule,
-            status: 'pending'
-          }),
-          createNotification(supabase, {
-            user_id: record.teacher_id,
-            type: 'new_request',
-            title: 'New Teaching Request',
-            message: `${schoolData.school_name} has requested you for ${requestDetails}`,
-            data: { request_id: record.id }
-          })
-        ]);
+        await sendEmail({
+          to: teacherData.email,
+          subject: 'New Teaching Request',
+          teacherName: teacherData.full_name,
+          schoolName: schoolData.school_name,
+          teachingSubject: record.subject,
+          schedule: record.schedule,
+          status: 'pending'
+        });
         break;
       case 'accepted':
         // Email handled inside handleAcceptedRequest
         await handleAcceptedRequest(teacherData, schoolData, record, supabase);
-        // Notify School
-        await createNotification(supabase, {
-          user_id: record.school_id,
-          type: 'request_accepted',
-          title: 'Request Accepted',
-          message: `${teacherData.full_name} has accepted your request for ${requestDetails}`,
-          data: { request_id: record.id }
-        });
         break;
       case 'rejected':
         // Notify School
-        await Promise.all([
-          sendEmail({
-            to: schoolData.email,
-            subject: 'Teaching Request Declined',
-            teacherName: teacherData.full_name,
-            schoolName: schoolData.school_name,
-            teachingSubject: record.subject,
-            schedule: record.schedule,
-            status: 'rejected'
-          }),
-          createNotification(supabase, {
-            user_id: record.school_id,
-            type: 'request_rejected',
-            title: 'Request Declined',
-            message: `${teacherData.full_name} has declined your request for ${requestDetails}`,
-            data: { request_id: record.id }
-          })
-        ]);
+        await sendEmail({
+          to: schoolData.email,
+          subject: 'Teaching Request Declined',
+          teacherName: teacherData.full_name,
+          schoolName: schoolData.school_name,
+          teachingSubject: record.subject,
+          schedule: record.schedule,
+          status: 'rejected'
+        });
         break;
       case 'cancelled':
         // Notify Both
-        await Promise.all([
-          sendEmail({
-            to: [teacherData.email, schoolData.email],
-            subject: 'Teaching Session Cancelled',
-            teacherName: teacherData.full_name,
-            schoolName: schoolData.school_name,
-            teachingSubject: record.subject,
-            schedule: record.schedule,
-            status: 'cancelled',
-            cancellationReason: record.cancellation_reason
-          }),
-          createNotification(supabase, {
-            user_id: record.teacher_id,
-            type: 'class_cancelled',
-            title: 'Session Cancelled',
-            message: `The session for ${requestDetails} has been cancelled`,
-            data: { request_id: record.id }
-          }),
-          createNotification(supabase, {
-            user_id: record.school_id,
-            type: 'class_cancelled',
-            title: 'Session Cancelled',
-            message: `The session for ${requestDetails} has been cancelled`,
-            data: { request_id: record.id }
-          })
-        ]);
+        await sendEmail({
+          to: [teacherData.email, schoolData.email],
+          subject: 'Teaching Session Cancelled',
+          teacherName: teacherData.full_name,
+          schoolName: schoolData.school_name,
+          teachingSubject: record.subject,
+          schedule: record.schedule,
+          status: 'cancelled',
+          cancellationReason: record.cancellation_reason
+        });
         break;
     }
 
