@@ -65,6 +65,43 @@ export async function POST(
 
     if (updateError) throw updateError;
 
+    // NEW: Create in-app notifications for both parties
+    try {
+      const { data: requestDetails } = await supabase
+        .from('teaching_requests')
+        .select(`
+          subject,
+          schedule,
+          teacher:teacher_profiles(full_name),
+          school:school_profiles(school_name)
+        `)
+        .eq('id', id)
+        .single();
+
+      if (requestDetails) {
+        const message = `The session for ${requestDetails.subject} on ${requestDetails.schedule.date} at ${requestDetails.schedule.time} has been cancelled.`;
+        
+        await Promise.all([
+          supabase.from('notifications').insert({
+            user_id: request.teacher_id,
+            type: 'class_cancelled',
+            title: 'Session Cancelled',
+            message: message,
+            data: { request_id: id }
+          }),
+          supabase.from('notifications').insert({
+            user_id: request.school_id,
+            type: 'class_cancelled',
+            title: 'Session Cancelled',
+            message: message,
+            data: { request_id: id }
+          })
+        ]);
+      }
+    } catch (notifError) {
+      console.error("Failed to create cancellation notifications:", notifError);
+    }
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Cancellation error:', error);

@@ -208,6 +208,30 @@ export function TeachingRequestsList({
 
       if (error) throw error;
 
+      // NEW: Create in-app notification for the school
+      try {
+        const { data: teacherProfile } = await supabase
+          .from('teacher_profiles')
+          .select('full_name')
+          .eq('id', userId)
+          .single();
+
+        const schoolId = allRequests.find(r => r.id === requestId)?.school_id;
+        const request = allRequests.find(r => r.id === requestId);
+        
+        if (schoolId && request) {
+          await supabase.from('notifications').insert({
+            user_id: schoolId,
+            type: newStatus === 'accepted' ? 'request_accepted' : 'request_rejected',
+            title: newStatus === 'accepted' ? 'Request Accepted' : 'Request Declined',
+            message: `${teacherProfile?.full_name || 'A teacher'} has ${newStatus} your request for ${request.subject}`,
+            data: { request_id: requestId }
+          });
+        }
+      } catch (notifError) {
+        console.error("Failed to create notification:", notifError);
+      }
+
       setAllRequests(prev =>
         prev.map(request =>
           request.id === requestId

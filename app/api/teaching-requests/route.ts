@@ -68,6 +68,25 @@ export async function POST(req: Request) {
       );
     }
 
+    // NEW: Create in-app notification for the teacher
+    try {
+      const { data: schoolData } = await supabase
+        .from('school_profiles')
+        .select('school_name')
+        .eq('id', user.id)
+        .single();
+
+      await supabase.from('notifications').insert({
+        user_id: body.teacher_id,
+        type: 'new_request',
+        title: 'New Teaching Request',
+        message: `${schoolData?.school_name || 'A school'} has requested you for ${body.subject} on ${body.schedule.date}`,
+        data: { request_id: data.id }
+      });
+    } catch (notifError) {
+      console.error("Failed to create notification:", notifError);
+    }
+
     return NextResponse.json({ request: data });
   } catch (error) {
     console.error("Request error:", error);

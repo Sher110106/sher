@@ -60,21 +60,31 @@ export async function POST(
     // 3. Send notification to the other party
     const isTeacherProposing = userId === request.teacher_id;
     const recipientEmail = isTeacherProposing ? request.school.email : request.teacher.email;
+    const recipientId = isTeacherProposing ? request.school_id : request.teacher_id;
     
     try {
-        await sendEmail({
-            to: recipientEmail,
-            subject: `Reschedule Proposed: ${request.subject}`,
-            teacherName: request.teacher.full_name,
-            schoolName: request.school.school_name,
-            teachingSubject: request.subject,
-            schedule: new_schedule,
-            oldSchedule: request.schedule,
-            status: 'reschedule_proposed',
-            cancellationReason: reason
-        });
-    } catch (emailErr) {
-        console.error('Failed to send reschedule email:', emailErr);
+        await Promise.all([
+          sendEmail({
+              to: recipientEmail,
+              subject: `Reschedule Proposed: ${request.subject}`,
+              teacherName: request.teacher.full_name,
+              schoolName: request.school.school_name,
+              teachingSubject: request.subject,
+              schedule: new_schedule,
+              oldSchedule: request.schedule,
+              status: 'reschedule_proposed',
+              cancellationReason: reason
+          }),
+          supabase.from('notifications').insert({
+            user_id: recipientId,
+            type: 'reschedule_proposed',
+            title: 'Reschedule Proposed',
+            message: `${isTeacherProposing ? request.teacher.full_name : request.school.school_name} has proposed to reschedule ${request.subject}`,
+            data: { request_id: teaching_request_id, reschedule_id: rescheduleData.id }
+          })
+        ]);
+    } catch (err) {
+        console.error('Failed to send reschedule notification:', err);
     }
 
     return NextResponse.json({ success: true, data: rescheduleData });
@@ -182,34 +192,54 @@ export async function PATCH(
 
           // 3. Send notification to the proposer
           const recipientEmail = reschedule.proposed_by === request.teacher_id ? request.teacher.email : request.school.email;
+          const recipientId = reschedule.proposed_by;
           try {
-              await sendEmail({
-                  to: recipientEmail,
-                  subject: `Reschedule Accepted: ${request.subject}`,
-                  teacherName: request.teacher.full_name,
-                  schoolName: request.school.school_name,
-                  teachingSubject: request.subject,
-                  schedule: reschedule.new_schedule,
-                  status: 'accepted'
-              });
-          } catch (emailErr) {
-              console.error('Failed to send reschedule accepted email:', emailErr);
+              await Promise.all([
+                sendEmail({
+                    to: recipientEmail,
+                    subject: `Reschedule Accepted: ${request.subject}`,
+                    teacherName: request.teacher.full_name,
+                    schoolName: request.school.school_name,
+                    teachingSubject: request.subject,
+                    schedule: reschedule.new_schedule,
+                    status: 'accepted'
+                }),
+                supabase.from('notifications').insert({
+                  user_id: recipientId,
+                  type: 'reschedule_accepted',
+                  title: 'Reschedule Accepted',
+                  message: `Your reschedule request for ${request.subject} has been accepted`,
+                  data: { request_id: teaching_request_id }
+                })
+              ]);
+          } catch (err) {
+              console.error('Failed to send reschedule accepted notification:', err);
           }
       } else if (status === 'rejected') {
           // Send notification to the proposer
           const recipientEmail = reschedule.proposed_by === request.teacher_id ? request.teacher.email : request.school.email;
+          const recipientId = reschedule.proposed_by;
           try {
-              await sendEmail({
-                  to: recipientEmail,
-                  subject: `Reschedule Declined: ${request.subject}`,
-                  teacherName: request.teacher.full_name,
-                  schoolName: request.school.school_name,
-                  teachingSubject: request.subject,
-                  schedule: reschedule.old_schedule,
-                  status: 'rejected'
-              });
-          } catch (emailErr) {
-              console.error('Failed to send reschedule rejected email:', emailErr);
+              await Promise.all([
+                sendEmail({
+                    to: recipientEmail,
+                    subject: `Reschedule Declined: ${request.subject}`,
+                    teacherName: request.teacher.full_name,
+                    schoolName: request.school.school_name,
+                    teachingSubject: request.subject,
+                    schedule: reschedule.old_schedule,
+                    status: 'rejected'
+                }),
+                supabase.from('notifications').insert({
+                  user_id: recipientId,
+                  type: 'reschedule_declined',
+                  title: 'Reschedule Declined',
+                  message: `Your reschedule request for ${request.subject} has been declined`,
+                  data: { request_id: teaching_request_id }
+                })
+              ]);
+          } catch (err) {
+              console.error('Failed to send reschedule rejected notification:', err);
           }
       }
 
