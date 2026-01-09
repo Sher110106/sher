@@ -16,9 +16,7 @@ export default async function SchoolRequestsPage() {
             *,
             teacher:teacher_profiles (
                 full_name,
-                subjects,
-                avg_rating,
-                review_count
+                subjects
             )
         `)
         .eq('school_id', user.id)

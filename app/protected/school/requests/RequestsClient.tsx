@@ -20,7 +20,6 @@ import {
 import { createClient } from "@/utils/supabase/client";
 import { CancelSessionModal } from '@/components/CancelSessionModal';
 import { RescheduleModal } from '@/components/RescheduleModal';
-import { RatingDisplay } from '@/components/RatingDisplay';
 
 interface TeachingRequest {
     id: string;
@@ -36,8 +35,6 @@ interface TeachingRequest {
     teacher: {
         full_name: string;
         subjects: string[];
-        avg_rating: number | null;
-        review_count: number | null;
     };
 }
 
@@ -115,11 +112,6 @@ export default function SchoolRequestsClient({ initialRequests, userId }: School
                                                 </div>
                                                 <div>
                                                     <h3 className="font-bold text-lg">{request.teacher.full_name}</h3>
-                                                    <RatingDisplay 
-                                                        rating={request.teacher.avg_rating || 0} 
-                                                        count={request.teacher.review_count || 0}
-                                                        size="sm"
-                                                    />
                                                 </div>
                                             </div>
                                             <Badge variant="outline" className="flex items-center gap-1.5 py-1">
