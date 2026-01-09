@@ -246,7 +246,15 @@ export default function NotificationDrawer({ isOpen, onClose, userId }: Notifica
                         </p>
                         <div className="flex items-center gap-2 mt-2">
                           <span className="text-xs text-muted-foreground">
-                            {formatDistanceToNow(parseISO(notification.created_at), { addSuffix: true })}
+                            {(() => {
+                              const timestamp = notification.created_at;
+                              // Ensure ISO string is treated as UTC if no offset exists
+                              const isoString = timestamp.includes('Z') || timestamp.includes('+') 
+                                ? timestamp 
+                                : `${timestamp}Z`;
+                              const date = new Date(isoString);
+                              return formatDistanceToNow(date, { addSuffix: true });
+                            })()}
                           </span>
                           {link && (
                             <span className="text-xs text-primary flex items-center gap-1">
