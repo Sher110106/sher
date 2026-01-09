@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
-import { Users, Edit, History, Zap, ArrowRight, ClipboardList } from "lucide-react";
+import { Users, Edit, History, Zap, ArrowRight, ClipboardList, CalendarDays } from "lucide-react";
 
 export default async function School(){
     const supabase=await createClient();
@@ -25,7 +25,7 @@ export default async function School(){
             </div>
 
             {/* Quick Actions Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
                 {[
                     {
                         href: "/protected/school/teachers",
@@ -42,6 +42,14 @@ export default async function School(){
                         icon: ClipboardList,
                         color: "text-rose-500",
                         bgColor: "bg-rose-50 dark:bg-rose-950/20"
+                    },
+                    {
+                        href: "/protected/school/calendar",
+                        title: "View Calendar",
+                        description: "See all your scheduled sessions",
+                        icon: CalendarDays,
+                        color: "text-indigo-500",
+                        bgColor: "bg-indigo-50 dark:bg-indigo-950/20"
                     },
                     {
                         href: "/protected/school/automated-requests",

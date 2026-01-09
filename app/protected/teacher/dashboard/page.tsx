@@ -6,7 +6,7 @@ import GoogleAccountCard from '@/components/GoogleAccountCard';
 import { createClient } from '@/utils/supabase/server';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { Calendar, Edit, History, ArrowRight, Star } from "lucide-react";
+import { Calendar, Edit, History, ArrowRight, Star, CalendarDays } from "lucide-react";
 
 export default async function TeacherDashboard() {
   const supabase = await createClient();
@@ -70,8 +70,16 @@ export default async function TeacherDashboard() {
       {/* Quick Actions and Google Account */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Quick Actions - takes 3 columns */}
-        <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-4 gap-6">
           {[
+            {
+              href: "/protected/teacher/calendar",
+              title: "View Calendar",
+              description: "See all your scheduled sessions",
+              icon: CalendarDays,
+              color: "text-indigo-500",
+              bgColor: "bg-indigo-50 dark:bg-indigo-950/20"
+            },
             {
               href: "/protected/teacher/schedule",
               title: "Manage Schedule",
