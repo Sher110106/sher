@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Bell, Check, CheckCheck, Loader2, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatDistanceToNow } from 'date-fns';
@@ -63,6 +64,12 @@ export default function NotificationDrawer({ isOpen, onClose, userId }: Notifica
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isMarkingRead, setIsMarkingRead] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
 
   const fetchNotifications = async () => {
     setIsLoading(true);
@@ -82,7 +89,14 @@ export default function NotificationDrawer({ isOpen, onClose, userId }: Notifica
   useEffect(() => {
     if (isOpen) {
       fetchNotifications();
+      // Prevent body scroll when drawer is open
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
     }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
   }, [isOpen]);
 
   const markAsRead = async (notificationId: string) => {
@@ -142,18 +156,18 @@ export default function NotificationDrawer({ isOpen, onClose, userId }: Notifica
 
   const unreadCount = notifications.filter(n => !n.read_at).length;
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
-  return (
+  const drawerContent = (
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 z-50 animate-in fade-in duration-200"
+        className="fixed inset-0 bg-black/50 z-[9998] animate-in fade-in duration-200"
         onClick={onClose}
       />
 
       {/* Drawer */}
-      <div className="fixed right-0 top-0 h-full w-full sm:w-96 bg-background border-l z-50 animate-in slide-in-from-right duration-300 flex flex-col">
+      <div className="fixed right-0 top-0 h-full w-full sm:w-96 bg-background border-l z-[9999] animate-in slide-in-from-right duration-300 flex flex-col shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
           <div className="flex items-center gap-2">
@@ -252,4 +266,6 @@ export default function NotificationDrawer({ isOpen, onClose, userId }: Notifica
       </div>
     </>
   );
+
+  return createPortal(drawerContent, document.body);
 }

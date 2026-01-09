@@ -6,6 +6,24 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 
+// Helper to parse schedule that might be string or object
+function parseSchedule(scheduleData: any): { date: string; time: string } | null {
+  if (!scheduleData) return null;
+  try {
+    const schedule = typeof scheduleData === 'string' 
+      ? JSON.parse(scheduleData) 
+      : scheduleData;
+    
+    if (schedule && schedule.date && schedule.time) {
+      return { date: schedule.date, time: schedule.time };
+    }
+    return null;
+  } catch (error) {
+    console.error('Error parsing schedule:', error);
+    return null;
+  }
+}
+
 export default async function TeacherCalendarPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -20,18 +38,21 @@ export default async function TeacherCalendarPage() {
     .select(`
       *,
       school:school_profiles(school_name),
-      meeting:meeting_details(meeting_link, google_event_id)
+      meeting:meeting_details(meet_link, meet_id)
     `)
-    .eq('teacher_id', user.id)
-    .not('schedule', 'is', null);
+    .eq('teacher_id', user.id);
 
-  // Transform data to include meeting info at top level
-  const transformedRequests = (requests || []).map(req => ({
-    ...req,
-    school: req.school,
-    meeting_link: req.meeting?.[0]?.meeting_link || null,
-    google_event_id: req.meeting?.[0]?.google_event_id || null,
-  }));
+  // Transform data: parse schedule and include meeting info at top level
+  const transformedRequests = (requests || []).map(req => {
+    const parsedSchedule = parseSchedule(req.schedule);
+    return {
+      ...req,
+      schedule: parsedSchedule,
+      school: req.school,
+      meeting_link: req.meeting?.[0]?.meet_link || null,
+      google_event_id: req.meeting?.[0]?.meet_id || null,
+    };
+  }).filter(req => req.schedule !== null);
 
   return (
     <div className="space-y-6 animate-fade-in">

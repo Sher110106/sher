@@ -251,6 +251,10 @@ export default function CalendarView({ requests, userType }: CalendarViewProps) 
               toolbar={false}
               popup
               selectable={false}
+              showAllEvents
+              messages={{
+                showMore: (count: number) => `+${count} more sessions`,
+              }}
             />
           </div>
         </CardContent>
