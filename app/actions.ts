@@ -107,7 +107,8 @@ export const signUpAction = async (formData: FormData) => {
       qualifications: qualifications, // Now an array of selected qualifications
       experience_years: parseInt(experienceYears || '0'),
       teaching_grade: parseInt(teachingGrade || '0'),
-      email: email
+      email: email,
+      onboarding_completed: false // New teachers start onboarding
     };
 
     const { error: teacherError } = await supabase
@@ -170,6 +171,16 @@ export const signInAction = async (formData: FormData) => {
   const role = metadata.role;
 
 if (role === 'teacher') {
+  // Check if onboarding is completed
+  const { data: teacherProfile } = await supabase
+    .from('teacher_profiles')
+    .select('onboarding_completed')
+    .eq('id', user.id)
+    .single();
+
+  if (!teacherProfile?.onboarding_completed) {
+    return redirect("/protected/teacher/onboarding");
+  }
   return redirect("/protected/teacher/dashboard");
 } else if (role === 'school') {
   return redirect("/protected/school/dashboard");

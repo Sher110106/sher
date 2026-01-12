@@ -15,6 +15,17 @@ export default async function TeacherDashboard() {
   if (!user) {
     redirect('/sign-in')
   }
+
+  // Check onboarding status first
+  const { data: onboardingCheck } = await supabase
+    .from('teacher_profiles')
+    .select('onboarding_completed')
+    .eq('id', user.id)
+    .single();
+
+  if (!onboardingCheck?.onboarding_completed) {
+    redirect('/protected/teacher/onboarding');
+  }
   
   const { data: requests } = await supabase
     .from('teaching_requests')

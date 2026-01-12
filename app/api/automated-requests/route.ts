@@ -2,6 +2,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 import { rateLimit } from '@/utils/rate-limit';
+import { rankTeachers } from '@/utils/teacher-ranking';
 
 const limiter = rateLimit({ interval: 60 * 1000, uniqueTokenPerInterval: 500 });
  
@@ -27,18 +28,52 @@ export async function POST(req: Request) {
   try {
     const body: AutomatedRequestParams = await req.json();
     
-    // Get qualified teachers
+    // Get qualified teachers matching subject and grade
     const { data: teachers, error } = await supabase
       .from('teacher_profiles')
-      .select('id, avg_rating')
+      .select('id, avg_rating, experience_years')
       .contains('subjects', [body.subject])
       .gte('teaching_grade', body.grade_level)
-      .order('avg_rating', { ascending: false })
-      .limit(5);
+      .limit(20); // Get more candidates for ranking
+
+    if (error) {
+      console.error('Teacher query error:', error);
+      throw error;
+    }
 
     if (!teachers?.length) {
       return NextResponse.json(
         { error: "No available teachers match criteria" },
+        { status: 404 }
+      );
+    }
+
+    // Apply minimum rating filter if specified
+    let filteredTeachers = teachers;
+    if (body.minimum_rating) {
+      filteredTeachers = teachers.filter(t => 
+        t.avg_rating !== null && t.avg_rating >= body.minimum_rating!
+      );
+    }
+
+    if (!filteredTeachers.length) {
+      return NextResponse.json(
+        { error: "No teachers meet the minimum rating requirement" },
+        { status: 404 }
+      );
+    }
+
+    // Use enhanced multi-factor ranking algorithm
+    // This ranks by: rating (30%), response time (20%), success rate (25%), 
+    // experience (10%), and affinity with this school (15%)
+    const rankedTeacherIds = await rankTeachers(filteredTeachers, user.id);
+
+    // Take top 5 for primary + fallbacks
+    const topTeachers = rankedTeacherIds.slice(0, 5);
+
+    if (topTeachers.length === 0) {
+      return NextResponse.json(
+        { error: "No teachers available after ranking" },
         { status: 404 }
       );
     }
@@ -48,12 +83,12 @@ export async function POST(req: Request) {
       .from('teaching_requests')
       .insert({
         school_id: user.id,
-        teacher_id: teachers[0].id,
+        teacher_id: topTeachers[0],
         subject: body.subject,
         schedule: body.schedule,
         status: 'pending',
         timeout_at: new Date(Date.now() + 7200 * 1000).toISOString(),
-        fallback_teachers: teachers.slice(1).map(t => t.id)
+        fallback_teachers: topTeachers.slice(1)
       })
       .select()
       .single();
@@ -70,3 +105,4 @@ export async function POST(req: Request) {
     );
   }
 }
+
