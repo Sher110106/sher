@@ -31,7 +31,7 @@ export async function POST(req: Request) {
     // Get qualified teachers matching subject and grade
     const { data: teachers, error } = await supabase
       .from('teacher_profiles')
-      .select('id, avg_rating, experience_years')
+      .select('id, avg_rating, experience_years, availability')
       .contains('subjects', [body.subject])
       .gte('teaching_grade', body.grade_level)
       .limit(20); // Get more candidates for ranking
@@ -64,9 +64,9 @@ export async function POST(req: Request) {
     }
 
     // Use enhanced multi-factor ranking algorithm
-    // This ranks by: rating (30%), response time (20%), success rate (25%), 
-    // experience (10%), and affinity with this school (15%)
-    const rankedTeacherIds = await rankTeachers(filteredTeachers, user.id);
+    // This ranks by: availability matching (40%), rating (30%), 
+    // response time (20%), and experience (10%)
+    const rankedTeacherIds = await rankTeachers(filteredTeachers, user.id, body.schedule);
 
     // Take top 5 for primary + fallbacks
     const topTeachers = rankedTeacherIds.slice(0, 5);
